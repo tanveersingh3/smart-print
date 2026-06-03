@@ -1,7 +1,7 @@
 {
   "name": "smart-print",
   "version": "1.0.0",
-  "description": "",
+  "description": "Smart Print Queue System",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -12,9 +12,9 @@
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
-    "dotenv": "^16.0.0",
-    "express": "^4.18.0",
-    "firebase-admin": "^11.0.0",
-    "multer": "^1.4.5"
+    "dotenv": "^16.4.5",
+    "express": "^4.18.2",
+    "firebase-admin": "^12.0.0",
+    "multer": "^1.4.4-lts.1"
   }
 }
