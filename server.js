@@ -92,5 +92,5 @@ app.patch('/api/jobs/:id/reject', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`Smart Print server running on port ${PORT}`));
