@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const admin = require('firebase-admin');
 const multer = require('multer');
+const path = require('path');
 require('dotenv').config();
 
 // Works locally (uses file) and on Railway (uses environment variable)
@@ -21,15 +22,18 @@ app.use(cors());
 app.use(express.json());
 const upload = multer({ dest: 'uploads/' });
 
+// Serve frontend
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Test route
-app.get('/', (req, res) => {
+app.get('/health', (req, res) => {
   res.json({ message: 'Smart Print server is running!' });
 });
 
 // Submit print job
 app.post('/api/jobs', upload.single('file'), async (req, res) => {
   try {
-    const { name, whatsapp, color, sides, copies, urgent, paid } = req.body;
+    const { name, whatsapp, color, sides, copies, urgent, paid, pages, colorRanges } = req.body;
     const db = admin.firestore();
 
     const counter = await db.collection('meta').doc('counter').get();
@@ -42,6 +46,8 @@ app.post('/api/jobs', upload.single('file'), async (req, res) => {
       copies: parseInt(copies),
       urgent: urgent === 'true',
       paid: paid === 'true',
+      pages: parseInt(pages) || 0,
+      colorRanges: colorRanges ? JSON.parse(colorRanges) : [],
       fileName: req.file ? req.file.originalname : 'unknown',
       status: 'pending',
       createdAt: admin.firestore.FieldValue.serverTimestamp()
@@ -90,6 +96,11 @@ app.patch('/api/jobs/:id/reject', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// Serve frontend for all other routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 const PORT = process.env.PORT || 8080;
