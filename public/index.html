@@ -957,11 +957,6 @@ function rejectJobById(cardId,serverId){
 function approveJob(id,token,name,fileUrl,fileName,serverId,config){
   var card=document.getElementById(id);if(!card)return;
 
-  // Open file in new tab — operator prints from there
-  if(fileUrl){
-    window.open(fileUrl,'_blank');
-  }
-
   // Show print settings panel on card
   var settingsPanel=document.createElement('div');
   settingsPanel.style.cssText='background:var(--blue-dim);border:1px solid var(--blue-border);border-radius:8px;padding:10px 14px;margin-top:10px;font-size:11px;color:#a0c8f0;line-height:2;';
