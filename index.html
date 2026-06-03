@@ -769,67 +769,107 @@ function checkSubmit(){
   document.getElementById('submitBtn').disabled=!(name&&hasContent);
 }
 
+// ── Backend URL ──
+var BACKEND_URL='https://smart-print-production.up.railway.app';
+
 // ── Submit ──
-function submitJob(){
+async function submitJob(){
   var name=document.getElementById('studentName').value.trim();
-  var token=tokenCounter++;
   var urgent=document.getElementById('toggleUrgent').classList.contains('on');
   var copies=parseInt(document.getElementById('copies').value)||1;
   var paid=document.getElementById('togglePay').classList.contains('on');
   var eta=urgent?'2–4 min':(pendingCount*2+2)+'–'+(pendingCount*3+4)+' min';
 
-  // Build tag summary
-  var isImg=(cfg.type==='img');
-  var colorTagClass,colorTagText,pagesTagText,fileText;
-  if(isImg){
-    colorTagClass=cfg.imgColor==='color'?'color':'bw';
-    colorTagText=cfg.imgColor==='color'?'Colour':'B&W';
-    var sheets=Math.ceil(cfg.imgCount/cfg.imgPerSheet);
-    pagesTagText=cfg.imgCount+' imgs · '+sheets+' sheet'+(sheets>1?'s':'')+' ('+cfg.imgPerSheet+'/sheet)';
-    fileText='🖼️ '+cfg.imgCount+' image'+(cfg.imgCount>1?'s':'');
-  } else {
-    if(cfg.color==='mixed'){colorTagClass='mixed';colorTagText='🎨 Mixed';}
-    else if(cfg.color==='color'){colorTagClass='color';colorTagText='All Colour';}
-    else{colorTagClass='bw';colorTagText='All B&W';}
-    pagesTagText=cfg.pages+' pages';
-    fileText='📄 Uploaded document';
-  }
+  // Disable button while submitting
+  var btn=document.getElementById('submitBtn');
+  btn.disabled=true;
+  btn.textContent='Submitting...';
 
-  var jobId='job-new-'+token;
-  var el=document.createElement('div');
-  el.className='job-card '+(urgent?'priority':'normal');
-  el.id=jobId;
-  el.style.animation='fadeUp 0.4s ease both';
-  el.innerHTML=
-    '<div class="job-token">'+String(token).padStart(2,'0')+'</div>'+
-    '<div class="job-info">'+
-      '<div class="job-name">'+name+(urgent?' <span style="font-size:11px;color:var(--orange)">⚡ URGENT</span>':'')+'</div>'+
-      '<div class="job-file">'+fileText+'</div>'+
-      '<div class="job-tags">'+
-        '<span class="tag '+colorTagClass+'">'+colorTagText+'</span>'+
-        '<span class="tag pages">'+pagesTagText+'</span>'+
-        '<span class="tag copies">'+copies+' '+(copies>1?'copies':'copy')+'</span>'+
-        '<span class="tag '+(paid?'paid':'unpaid')+'">'+(paid?'PAID ✓':'UNPAID')+'</span>'+
+  try {
+    // Build form data
+    var formData=new FormData();
+    formData.append('name',name);
+    formData.append('whatsapp',document.getElementById('whatsappNum').value);
+    formData.append('color',cfg.type==='img'?cfg.imgColor:cfg.color);
+    formData.append('sides',cfg.sides);
+    formData.append('copies',copies);
+    formData.append('urgent',urgent);
+    formData.append('paid',paid);
+    formData.append('pages',cfg.pages||cfg.imgCount);
+    formData.append('colorRanges',JSON.stringify(cfg.colorRanges||[]));
+
+    // Attach file if exists
+    var fileInput=document.getElementById('fileInput');
+    if(fileInput.files&&fileInput.files[0]){
+      formData.append('file',fileInput.files[0]);
+    }
+
+    // Send to Railway backend
+    var res=await fetch(BACKEND_URL+'/api/jobs',{method:'POST',body:formData});
+    var data=await res.json();
+
+    if(!data.success){throw new Error(data.error||'Unknown error');}
+
+    var token=data.token;
+
+    // Build tag summary for operator queue
+    var isImg=(cfg.type==='img');
+    var colorTagClass,colorTagText,pagesTagText,fileText;
+    if(isImg){
+      colorTagClass=cfg.imgColor==='color'?'color':'bw';
+      colorTagText=cfg.imgColor==='color'?'Colour':'B&W';
+      var sheets=Math.ceil(cfg.imgCount/cfg.imgPerSheet);
+      pagesTagText=cfg.imgCount+' imgs · '+sheets+' sheet'+(sheets>1?'s':'')+' ('+cfg.imgPerSheet+'/sheet)';
+      fileText='🖼️ '+cfg.imgCount+' image'+(cfg.imgCount>1?'s':'');
+    } else {
+      if(cfg.color==='mixed'){colorTagClass='mixed';colorTagText='🎨 Mixed';}
+      else if(cfg.color==='color'){colorTagClass='color';colorTagText='All Colour';}
+      else{colorTagClass='bw';colorTagText='All B&W';}
+      pagesTagText=cfg.pages+' pages';
+      fileText='📄 Uploaded document';
+    }
+
+    var jobId='job-new-'+token;
+    var el=document.createElement('div');
+    el.className='job-card '+(urgent?'priority':'normal');
+    el.id=jobId;
+    el.style.animation='fadeUp 0.4s ease both';
+    el.innerHTML=
+      '<div class="job-token">'+token+'</div>'+
+      '<div class="job-info">'+
+        '<div class="job-name">'+name+(urgent?' <span style="font-size:11px;color:var(--orange)">⚡ URGENT</span>':'')+'</div>'+
+        '<div class="job-file">'+fileText+'</div>'+
+        '<div class="job-tags">'+
+          '<span class="tag '+colorTagClass+'">'+colorTagText+'</span>'+
+          '<span class="tag pages">'+pagesTagText+'</span>'+
+          '<span class="tag copies">'+copies+' '+(copies>1?'copies':'copy')+'</span>'+
+          '<span class="tag '+(paid?'paid':'unpaid')+'">'+(paid?'PAID ✓':'UNPAID')+'</span>'+
+        '</div>'+
       '</div>'+
-    '</div>'+
-    '<div class="job-actions">'+
-      '<button class="btn-approve" onclick="approveJob(\''+jobId+'\',\''+String(token).padStart(2,'0')+'\',\''+name+'\')">✓ Approve</button>'+
-      '<button class="btn-reject" onclick="rejectJob(\''+jobId+'\')">Reject</button>'+
-      '<div class="job-time">Just now</div>'+
-    '</div>';
+      '<div class="job-actions">'+
+        '<button class="btn-approve" onclick="approveJob(\''+jobId+'\',\''+token+'\',\''+name+'\')">✓ Approve</button>'+
+        '<button class="btn-reject" onclick="rejectJob(\''+jobId+'\')">Reject</button>'+
+        '<div class="job-time">Just now</div>'+
+      '</div>';
 
-  var queue=document.getElementById('jobQueue');
-  if(urgent){var fn=queue.querySelector('.job-card.normal');fn?queue.insertBefore(el,fn):queue.appendChild(el);}
-  else queue.appendChild(el);
+    var queue=document.getElementById('jobQueue');
+    if(urgent){var fn=queue.querySelector('.job-card.normal');fn?queue.insertBefore(el,fn):queue.appendChild(el);}
+    else queue.appendChild(el);
 
-  document.getElementById('tokenNum').textContent=String(token).padStart(2,'0');
-  document.getElementById('tokenEta').textContent=eta;
-  document.getElementById('tokenCard').classList.add('show');
-  pendingCount++;
-  updateOpStats();
-  document.getElementById('queueCount').textContent=pendingCount;
-  document.getElementById('waitTime').textContent='~'+(pendingCount*2+2)+' min';
-  showToast('🎉 Job #'+String(token).padStart(2,'0')+' submitted! Est. '+eta,'green');
+    document.getElementById('tokenNum').textContent=token;
+    document.getElementById('tokenEta').textContent=eta;
+    document.getElementById('tokenCard').classList.add('show');
+    pendingCount++;
+    updateOpStats();
+    document.getElementById('queueCount').textContent=pendingCount;
+    document.getElementById('waitTime').textContent='~'+(pendingCount*2+2)+' min';
+    showToast('🎉 Job #'+token+' submitted! Est. '+eta,'green');
+
+  } catch(err) {
+    showToast('❌ Error: '+err.message,'orange');
+    btn.disabled=false;
+    btn.textContent='Submit Print Job →';
+  }
 }
 
 // ── Operator actions ──
