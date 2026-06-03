@@ -539,11 +539,91 @@ var cfg={
 var pendingCount=3,doneCount=12,tokenCounter=11,revenue=284;
  
 // ── View switch ──
+var refreshInterval=null;
+
 function switchView(v,btn){
   document.querySelectorAll('.view').forEach(function(e){e.classList.remove('active');});
   document.querySelectorAll('.nav-tab').forEach(function(e){e.classList.remove('active');});
   document.getElementById('view-'+v).classList.add('active');
   btn.classList.add('active');
+
+  // Load jobs when operator tab opens
+  if(v==='operator'){
+    loadJobsFromServer();
+    // Auto refresh every 5 seconds
+    if(refreshInterval)clearInterval(refreshInterval);
+    refreshInterval=setInterval(loadJobsFromServer,5000);
+  } else {
+    if(refreshInterval)clearInterval(refreshInterval);
+  }
+}
+
+function loadJobsFromServer(){
+  fetch(BACKEND_URL+'/api/jobs')
+    .then(function(r){return r.json();})
+    .then(function(jobs){
+      var queue=document.getElementById('jobQueue');
+      // Only update if there are new jobs from server
+      jobs.forEach(function(job){
+        // Check if this job card already exists
+        if(!document.getElementById('server-job-'+job.id)){
+          var urgent=job.urgent;
+          var colorTagClass=job.color==='color'?'color':job.color==='mixed'?'mixed':'bw';
+          var colorTagText=job.color==='color'?'All Colour':job.color==='mixed'?'🎨 Mixed':'All B&W';
+          var pagesTag=job.pages+' pages';
+          var config={
+            color:job.color,
+            sides:job.sides,
+            copies:job.copies,
+            pages:job.pages,
+            colorRanges:job.colorRanges||[]
+          };
+          var configStr=JSON.stringify(config).replace(/'/g,"\\'").replace(/"/g,'&quot;');
+
+          var el=document.createElement('div');
+          el.className='job-card '+(urgent?'priority':'normal');
+          el.id='server-job-'+job.id;
+          el.style.animation='fadeUp 0.4s ease both';
+          el.innerHTML=
+            '<div class="job-token">'+job.token+'</div>'+
+            '<div class="job-info">'+
+              '<div class="job-name">'+job.name+(urgent?' <span style="font-size:11px;color:var(--orange)">⚡ URGENT</span>':'')+'</div>'+
+              '<div class="job-file">📄 '+job.fileName+'</div>'+
+              '<div class="job-tags">'+
+                '<span class="tag '+colorTagClass+'">'+colorTagText+'</span>'+
+                '<span class="tag pages">'+pagesTag+'</span>'+
+                '<span class="tag copies">'+job.copies+' '+(job.copies>1?'copies':'copy')+'</span>'+
+                '<span class="tag '+(job.paid?'paid':'unpaid')+'">'+(job.paid?'PAID ✓':'UNPAID')+'</span>'+
+              '</div>'+
+            '</div>'+
+            '<div class="job-actions">'+
+              '<button class="btn-approve" onclick="approveJob(\'server-job-'+job.id+'\',\''+job.token+'\',\''+job.name+'\',\''+job.fileUrl+'\',\''+job.fileName+'\',JSON.parse(\''+JSON.stringify(config).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"')+'\'))">✓ Approve & Print</button>'+
+              '<button class="btn-reject" onclick="rejectJob(\'server-job-'+job.id+'\',\''+job.id+'\')">Reject</button>'+
+              '<div class="job-time">'+formatTime(job.createdAt)+'</div>'+
+            '</div>';
+
+          if(urgent){
+            var fn=queue.querySelector('.job-card.normal');
+            fn?queue.insertBefore(el,fn):queue.appendChild(el);
+          } else {
+            queue.appendChild(el);
+          }
+          pendingCount++;
+          updateOpStats();
+        }
+      });
+    })
+    .catch(function(err){console.log('Error loading jobs:',err);});
+}
+
+function formatTime(ts){
+  if(!ts)return 'Just now';
+  var d=ts._seconds?new Date(ts._seconds*1000):new Date(ts);
+  var now=new Date();
+  var diff=Math.floor((now-d)/60000);
+  if(diff<1)return 'Just now';
+  if(diff<60)return diff+' min ago';
+  return d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
 }
  
 // ── Chip select ──
@@ -936,12 +1016,18 @@ function finishJob(id,token,name){
   showToast('✅ Token #'+token+' ready for pickup!','green');
   setTimeout(function(){if(card.parentNode)card.parentNode.removeChild(card);},3000);
 }
-function rejectJob(id){
-  var card=document.getElementById(id);if(!card)return;
+function rejectJob(id, serverId){
+  var card=document.getElementById(id);
+  if(!card)return;
   card.style.transition='opacity 0.3s,transform 0.3s';
-  card.style.opacity='0';card.style.transform='translateX(20px)';
+  card.style.opacity='0';
+  card.style.transform='translateX(20px)';
   setTimeout(function(){if(card.parentNode)card.parentNode.removeChild(card);},300);
-  pendingCount=Math.max(0,pendingCount-1);updateOpStats();
+  pendingCount=Math.max(0,pendingCount-1);
+  updateOpStats();
+  if(serverId){
+    fetch(BACKEND_URL+'/api/jobs/'+serverId+'/reject',{method:'PATCH'}).catch(function(){});
+  }
   showToast('❌ Job rejected','orange');
 }
 function updateOpStats(){
