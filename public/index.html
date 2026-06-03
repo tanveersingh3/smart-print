@@ -78,7 +78,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 2
 .toggle.on{background:var(--green);border-color:var(--green);}
 .toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--muted);transition:transform 0.2s,background 0.2s;}
 .toggle.on::after{transform:translateX(20px);background:var(--bg);}
-
+ 
 /* ── PER-PAGE COLOUR CONFIG ── */
 .page-color-section{display:none;margin-top:4px;}
 .page-color-section.show{display:block;}
@@ -96,7 +96,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 2
 .color-summary{margin-top:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;line-height:1.6;}
 .color-summary span.c{color:var(--purple);}
 .color-summary span.b{color:var(--muted);}
-
+ 
 /* ── IMAGES PER SHEET ── */
 .img-layout-section{display:none;margin-top:4px;}
 .img-layout-section.show{display:block;}
@@ -109,7 +109,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 2
 .grid-opt.active .g-cell{background:var(--green-border);}
 .grid-opt .g-label{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;}
 .grid-opt.active .g-label{color:var(--green);}
-
+ 
 /* Price box */
 .price-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-top:16px;}
 .price-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:13px;}
@@ -190,7 +190,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 2
 </style>
 </head>
 <body>
-
+ 
 <nav>
   <div class="logo">Smart<span>Print</span></div>
   <div class="nav-tabs">
@@ -203,13 +203,13 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 2
     <div class="live-label">LIVE</div>
   </div>
 </nav>
-
+ 
 <!-- ══ STUDENT VIEW ══ -->
 <div class="view active" id="view-student">
   <div class="section-title">Submit Print Job</div>
   <div class="section-sub">Configure your document — just show up for pickup.</div>
   <div class="student-layout">
-
+ 
     <!-- LEFT -->
     <div>
       <div class="card">
@@ -235,7 +235,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 2
           <div class="img-thumbs" id="imgThumbs"></div>
           <button class="file-remove" style="display:block;margin-top:4px;font-size:13px;color:var(--muted);" onclick="removeFile()">✕ Remove all</button>
         </div>
-
+ 
         <div class="field">
           <label>Your Name</label>
           <input type="text" id="studentName" placeholder="e.g. Arjun Sharma" oninput="checkSubmit()">
@@ -245,10 +245,10 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 2
           <input type="tel" id="whatsappNum" placeholder="+91 98765 43210">
         </div>
       </div>
-
+ 
       <div class="card" style="margin-top:16px">
         <div class="card-title">⚙️ Print Configuration</div>
-
+ 
         <!-- ── SECTION A: shown for PDFs/DOCX ── -->
         <div id="docConfig">
           <div class="field">
@@ -259,7 +259,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 2
               <div class="chip" onclick="selectChip('colorChips',this,'mixed');showColorSection(true)">🎨 Mixed</div>
             </div>
           </div>
-
+ 
           <!-- Mixed colour config -->
           <div class="page-color-section" id="pageColorSection">
             <div class="page-color-label">Colour Pages</div>
@@ -272,7 +272,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 2
             <div class="color-summary" id="colorSummary" style="display:none"></div>
           </div>
         </div>
-
+ 
         <!-- ── SECTION B: Images per sheet (only for images) ── -->
         <div id="imgConfig" style="display:none">
           <div class="field">
@@ -332,9 +332,9 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 2
             </div>
           </div>
         </div>
-
+ 
         <div class="divider"></div>
-
+ 
         <div class="field">
           <label>Sides</label>
           <div class="chips" id="sideChips">
@@ -371,7 +371,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 2
         </div>
       </div>
     </div>
-
+ 
     <!-- RIGHT -->
     <div>
       <div class="card">
@@ -392,7 +392,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 2
         </div>
         <button class="btn-primary" id="submitBtn" onclick="submitJob()" disabled>Submit Print Job →</button>
       </div>
-
+ 
       <div class="card" style="margin-top:14px">
         <div class="card-title">📊 Live Queue Status</div>
         <div style="display:flex;gap:20px;flex-wrap:wrap;">
@@ -401,7 +401,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 2
           <div><div style="font-size:28px;font-weight:700;color:var(--green);font-family:'Fraunces',serif">✓</div><div style="font-size:12px;color:var(--muted)">Printer online</div></div>
         </div>
       </div>
-
+ 
       <div class="token-card" id="tokenCard">
         <div class="token-label">YOUR TOKEN NUMBER</div>
         <div class="token-num" id="tokenNum">—</div>
@@ -412,7 +412,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 2
     </div>
   </div>
 </div>
-
+ 
 <!-- ══ OPERATOR VIEW ══ -->
 <div class="view" id="view-operator">
   <div class="section-title">Operator Dashboard</div>
@@ -459,7 +459,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 2
         </div>
       </div>
       <div class="job-actions">
-        <button class="btn-approve" onclick="approveJob('job-1','08','Arjun Sharma')">✓ Approve</button>
+        <button class="btn-approve" onclick="approveJob('job-1','08','Arjun Sharma','','Assignment_CS301.pdf',{color:'mixed',sides:'single',copies:1,pages:30,colorRanges:['1-5']})">✓ Approve & Print</button>
         <button class="btn-reject" onclick="rejectJob('job-1')">Reject</button>
         <div class="job-time">Just now</div>
       </div>
@@ -477,7 +477,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 2
         </div>
       </div>
       <div class="job-actions">
-        <button class="btn-approve" onclick="approveJob('job-2','09','Priya Singh')">✓ Approve</button>
+        <button class="btn-approve" onclick="approveJob('job-2','09','Priya Singh','','Photos',{color:'color',sides:'single',copies:1,pages:4,colorRanges:[]})">✓ Approve & Print</button>
         <button class="btn-reject" onclick="rejectJob('job-2')">Reject</button>
         <div class="job-time">3 min ago</div>
       </div>
@@ -495,14 +495,14 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 2
         </div>
       </div>
       <div class="job-actions">
-        <button class="btn-approve" onclick="approveJob('job-3','10','Karan Verma')">✓ Approve</button>
+        <button class="btn-approve" onclick="approveJob('job-3','10','Karan Verma','','Poster_Design.jpg',{color:'color',sides:'single',copies:3,pages:1,colorRanges:[]})">✓ Approve & Print</button>
         <button class="btn-reject" onclick="rejectJob('job-3')">Reject</button>
         <div class="job-time">5 min ago</div>
       </div>
     </div>
   </div>
 </div>
-
+ 
 <!-- ══ HISTORY VIEW ══ -->
 <div class="view" id="view-history">
   <div class="section-title">Print History</div>
@@ -521,9 +521,9 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 2
     </table>
   </div>
 </div>
-
+ 
 <div class="toast" id="toast"></div>
-
+ 
 <script>
 var cfg={
   type:'doc',   // 'doc' or 'img'
@@ -537,7 +537,7 @@ var cfg={
   colorRanges:[] // [{label, colorPages, totalPages}]
 };
 var pendingCount=3,doneCount=12,tokenCounter=11,revenue=284;
-
+ 
 // ── View switch ──
 function switchView(v,btn){
   document.querySelectorAll('.view').forEach(function(e){e.classList.remove('active');});
@@ -545,7 +545,7 @@ function switchView(v,btn){
   document.getElementById('view-'+v).classList.add('active');
   btn.classList.add('active');
 }
-
+ 
 // ── Chip select ──
 function selectChip(gid,el,val){
   document.querySelectorAll('#'+gid+' .chip').forEach(function(c){c.classList.remove('active');});
@@ -555,7 +555,7 @@ function selectChip(gid,el,val){
   if(gid==='imgColorChips')cfg.imgColor=val;
   updatePrice();
 }
-
+ 
 // ── Image grid ──
 function selectImgGrid(el,n){
   document.querySelectorAll('#imgGridOpts .grid-opt').forEach(function(o){o.classList.remove('active');});
@@ -571,14 +571,14 @@ function updateImgSheetNote(){
     note.textContent=cfg.imgCount+' images ÷ '+cfg.imgPerSheet+' per sheet = '+sheets+' sheet'+(sheets>1?'s':'');
   } else note.textContent='';
 }
-
+ 
 // ── Show/hide mixed colour section ──
 function showColorSection(show){
   var s=document.getElementById('pageColorSection');
   if(show)s.classList.add('show'); else s.classList.remove('show');
   updatePrice();
 }
-
+ 
 // ── Colour ranges ──
 function addColorRange(){
   var inp=document.getElementById('colorRangeInput');
@@ -630,7 +630,7 @@ function parseRangesToCount(ranges,total){
   });
   return Object.keys(set).length;
 }
-
+ 
 // ── File handling ──
 function handleFile(input){
   var files=input.files;
@@ -638,7 +638,7 @@ function handleFile(input){
   var first=files[0];
   var ext=first.name.split('.').pop().toLowerCase();
   var isImg=(['jpg','jpeg','png'].indexOf(ext)>-1);
-
+ 
   // Check if multiple files uploaded
   if(files.length>1 || isImg){
     // Image mode
@@ -653,13 +653,13 @@ function handleFile(input){
     handleDocFile(first);
   }
 }
-
+ 
 function handleDocFile(file){
   var ext=file.name.split('.').pop().toLowerCase();
   var icons={pdf:'📄',doc:'📝',docx:'📝'};
   var pages=Math.floor(Math.random()*28)+4;
   cfg.type='doc';cfg.pages=pages;cfg.imgCount=0;
-
+ 
   document.getElementById('fileIcon').textContent=icons[ext]||'📄';
   document.getElementById('fileName').textContent=file.name;
   document.getElementById('fileMeta').textContent=ext.toUpperCase()+' · '+pages+' pages · '+(file.size/1048576).toFixed(1)+' MB';
@@ -672,10 +672,10 @@ function handleDocFile(file){
   updateColorSummary();
   updatePrice();checkSubmit();
 }
-
+ 
 function setImageMode(imgFiles){
   cfg.type='img';cfg.imgCount=imgFiles.length;cfg.pages=0;
-
+ 
   document.getElementById('filePreview').classList.remove('show');
   document.getElementById('uploadZone').style.display='none';
   document.getElementById('imgThumbsWrap').style.display='block';
@@ -683,7 +683,7 @@ function setImageMode(imgFiles){
   document.getElementById('docConfig').style.display='none';
   document.getElementById('imgConfig').style.display='';
   document.getElementById('pageRangeField').style.display='none';
-
+ 
   // Render thumbnails (max 6 shown + "+N more")
   var wrap=document.getElementById('imgThumbs');wrap.innerHTML='';
   var shown=Math.min(imgFiles.length,6);
@@ -701,7 +701,7 @@ function setImageMode(imgFiles){
   updateImgSheetNote();
   updatePrice();checkSubmit();
 }
-
+ 
 function removeFile(){
   cfg.pages=0;cfg.imgCount=0;cfg.type='doc';cfg.colorRanges=[];
   document.getElementById('uploadZone').style.display='';
@@ -716,14 +716,14 @@ function removeFile(){
   document.getElementById('pageColorSection').classList.remove('show');
   updatePrice();checkSubmit();
 }
-
+ 
 // ── Price calc ──
 function updatePrice(){
   var copies=parseInt(document.getElementById('copies').value)||1;
   var urgent=document.getElementById('toggleUrgent').classList.contains('on');
   var urg=urgent?5:0;
   var cost=0;var sheetsLabel='Sheets';var sheetsVal='—';var modeStr='—';
-
+ 
   if(cfg.type==='img'&&cfg.imgCount>0){
     var sheets=Math.ceil(cfg.imgCount/cfg.imgPerSheet);
     var rate=cfg.imgColor==='color'?5:2;
@@ -751,7 +751,7 @@ function updatePrice(){
       modeStr='Mixed (₹5 colour, ₹2 B&W)';
     }
   }
-
+ 
   var total=cost+urg;
   document.getElementById('prSheetsLabel').textContent=sheetsLabel;
   document.getElementById('prSheets').textContent=sheetsVal;
@@ -762,16 +762,16 @@ function updatePrice(){
   document.getElementById('prTotal').textContent=(total>0)?'₹'+total:'—';
   checkSubmit();
 }
-
+ 
 function checkSubmit(){
   var name=document.getElementById('studentName').value.trim();
   var hasContent=(cfg.pages>0||cfg.imgCount>0);
   document.getElementById('submitBtn').disabled=!(name&&hasContent);
 }
-
+ 
 // ── Backend URL ──
 var BACKEND_URL='https://smart-print-production.up.railway.app';
-
+ 
 // ── Submit ──
 async function submitJob(){
   var name=document.getElementById('studentName').value.trim();
@@ -779,12 +779,12 @@ async function submitJob(){
   var copies=parseInt(document.getElementById('copies').value)||1;
   var paid=document.getElementById('togglePay').classList.contains('on');
   var eta=urgent?'2–4 min':(pendingCount*2+2)+'–'+(pendingCount*3+4)+' min';
-
+ 
   // Disable button while submitting
   var btn=document.getElementById('submitBtn');
   btn.disabled=true;
   btn.textContent='Submitting...';
-
+ 
   try {
     // Build form data
     var formData=new FormData();
@@ -797,21 +797,21 @@ async function submitJob(){
     formData.append('paid',paid);
     formData.append('pages',cfg.pages||cfg.imgCount);
     formData.append('colorRanges',JSON.stringify(cfg.colorRanges||[]));
-
+ 
     // Attach file if exists
     var fileInput=document.getElementById('fileInput');
     if(fileInput.files&&fileInput.files[0]){
       formData.append('file',fileInput.files[0]);
     }
-
+ 
     // Send to Railway backend
     var res=await fetch(BACKEND_URL+'/api/jobs',{method:'POST',body:formData});
     var data=await res.json();
-
+ 
     if(!data.success){throw new Error(data.error||'Unknown error');}
-
+ 
     var token=data.token;
-
+ 
     // Build tag summary for operator queue
     var isImg=(cfg.type==='img');
     var colorTagClass,colorTagText,pagesTagText,fileText;
@@ -828,7 +828,7 @@ async function submitJob(){
       pagesTagText=cfg.pages+' pages';
       fileText='📄 Uploaded document';
     }
-
+ 
     var jobId='job-new-'+token;
     var el=document.createElement('div');
     el.className='job-card '+(urgent?'priority':'normal');
@@ -847,15 +847,15 @@ async function submitJob(){
         '</div>'+
       '</div>'+
       '<div class="job-actions">'+
-        '<button class="btn-approve" onclick="approveJob(\''+jobId+'\',\''+token+'\',\''+name+'\')">✓ Approve</button>'+
+        '<button class="btn-approve" onclick="approveJob(\''+jobId+'\',\''+token+'\',\''+name+'\',\'\',\'Uploaded document\',{color:\''+cfg.color+'\',sides:\''+cfg.sides+'\',copies:'+copies+',pages:'+cfg.pages+',colorRanges:[]})">✓ Approve & Print</button>'+
         '<button class="btn-reject" onclick="rejectJob(\''+jobId+'\')">Reject</button>'+
         '<div class="job-time">Just now</div>'+
       '</div>';
-
+ 
     var queue=document.getElementById('jobQueue');
     if(urgent){var fn=queue.querySelector('.job-card.normal');fn?queue.insertBefore(el,fn):queue.appendChild(el);}
     else queue.appendChild(el);
-
+ 
     document.getElementById('tokenNum').textContent=token;
     document.getElementById('tokenEta').textContent=eta;
     document.getElementById('tokenCard').classList.add('show');
@@ -864,33 +864,60 @@ async function submitJob(){
     document.getElementById('queueCount').textContent=pendingCount;
     document.getElementById('waitTime').textContent='~'+(pendingCount*2+2)+' min';
     showToast('🎉 Job #'+token+' submitted! Est. '+eta,'green');
-
+ 
   } catch(err) {
     showToast('❌ Error: '+err.message,'orange');
     btn.disabled=false;
     btn.textContent='Submit Print Job →';
   }
 }
-
+ 
 // ── Operator actions ──
-function approveJob(id,token,name){
+function approveJob(id,token,name,fileUrl,fileName,config){
   var card=document.getElementById(id);if(!card)return;
+ 
+  // Auto-download file if URL exists
+  if(fileUrl){
+    var a=document.createElement('a');
+    a.href=fileUrl;
+    a.download=fileName||'document';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+ 
+    // Open print dialog after short delay
+    setTimeout(function(){window.print();},1500);
+  }
+ 
+  // Show print settings on card
+  var settingsPanel=document.createElement('div');
+  settingsPanel.style.cssText='background:var(--blue-dim);border:1px solid var(--blue-border);border-radius:8px;padding:10px 14px;margin-top:10px;font-size:11px;color:#a0c8f0;line-height:2;';
+  settingsPanel.innerHTML=
+    '<div style="font-size:11px;font-weight:700;color:var(--blue);margin-bottom:4px;font-family:\'DM Mono\',monospace;letter-spacing:0.08em;">PRINT SETTINGS</div>'+
+    (config?
+      '🎨 Mode: <b style="color:var(--text)">'+(config.color==='bw'?'Black & White':config.color==='color'?'Full Colour':'Mixed Colour')+'</b><br>'+
+      '📄 Pages: <b style="color:var(--text)">'+config.pages+'</b><br>'+
+      '📋 Copies: <b style="color:var(--text)">'+config.copies+'</b><br>'+
+      '↔️ Sides: <b style="color:var(--text)">'+(config.sides==='double'?'Double sided':'Single sided')+'</b>'+
+      (config.colorRanges&&config.colorRanges.length?'<br>🌈 Colour pages: <b style="color:var(--text)">'+config.colorRanges.join(', ')+'</b>':'')
+    :'See tags above')+
+    '<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--blue-border);">'+
+      '<button onclick="markDone(\''+id+'\',\''+token+'\',\''+name+'\')" style="width:100%;padding:7px;background:var(--green);color:var(--bg);border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:\'DM Sans\',sans-serif;">✓ Mark as Printed</button>'+
+    '</div>';
+ 
   card.className='job-card processing processing-state';
   card.querySelector('.job-actions').innerHTML='<div style="color:var(--blue);font-size:12px;font-weight:600;">🖨️ Printing…</div>';
-  var bar=document.createElement('div');bar.className='printing-bar';
-  bar.innerHTML='<div class="printing-fill" id="fill-'+id+'"></div>';
-  card.querySelector('.job-info').appendChild(bar);
-  var prog=0;
-  var iv=setInterval(function(){
-    prog+=Math.random()*12+4;
-    var f=document.getElementById('fill-'+id);
-    if(f)f.style.width=Math.min(prog,100)+'%';
-    if(prog>=100){clearInterval(iv);setTimeout(function(){finishJob(id,token,name);},400);}
-  },200);
+  card.querySelector('.job-info').appendChild(settingsPanel);
+ 
   pendingCount=Math.max(0,pendingCount-1);
   document.getElementById('opProcessing').textContent=parseInt(document.getElementById('opProcessing').textContent)+1;
   updateOpStats();
+  fetch(BACKEND_URL+'/api/jobs/'+id+'/approve',{method:'PATCH'}).catch(function(){});
   showToast('🖨️ Printing #'+token+' — '+name,'green');
+}
+ 
+function markDone(id,token,name){
+  finishJob(id,token,name);
 }
 function finishJob(id,token,name){
   var card=document.getElementById(id);if(!card)return;
@@ -921,18 +948,18 @@ function updateOpStats(){
   document.getElementById('opPending').textContent=pendingCount;
   document.getElementById('queueLabel').textContent=pendingCount+' pending';
 }
-
+ 
 // ── Toast ──
 function showToast(msg,type){
   var t=document.getElementById('toast');
   t.textContent=msg;t.className='toast show '+(type||'');
   setTimeout(function(){t.classList.remove('show');},3500);
 }
-
+ 
 // ── Simulate existing print ──
 var pp=0,pf=document.getElementById('printFill');
 if(pf){var sim=setInterval(function(){pp+=Math.random()*8+3;pf.style.width=Math.min(pp,100)+'%';if(pp>=100){clearInterval(sim);setTimeout(function(){finishJob('job-printing','07','Riya Mehta');},400);}},400);}
-
+ 
 // ── Drag & drop ──
 var uz=document.getElementById('uploadZone');
 uz.addEventListener('dragover',function(e){e.preventDefault();uz.classList.add('drag');});
