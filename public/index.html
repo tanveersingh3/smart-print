@@ -882,25 +882,28 @@ function switchView(v,btn){
 }
 
 // ── Load jobs from Firebase via backend ──
+var jobDataStore={};
+
 function loadJobsFromServer(){
   fetch(BACKEND_URL+'/api/jobs')
     .then(function(r){return r.json();})
     .then(function(jobs){
       jobs.forEach(function(job){
         var cardId='server-job-'+job.id;
-        if(document.getElementById(cardId))return; // already shown
+        if(document.getElementById(cardId))return;
+
+        // Store job data globally — avoids string escaping issues
+        jobDataStore[job.id]=job;
+
         var urgent=job.urgent;
         var colorTagClass=job.color==='color'?'color':job.color==='mixed'?'mixed':'bw';
         var colorTagText=job.color==='color'?'All Colour':job.color==='mixed'?'🎨 Mixed':'All B&W';
-        var config={color:job.color,sides:job.sides,copies:job.copies,pages:job.pages,colorRanges:job.colorRanges||[]};
+
         var el=document.createElement('div');
         el.className='job-card '+(urgent?'priority':'normal');
         el.id=cardId;
         el.style.animation='fadeUp 0.4s ease both';
-        var safeFileUrl=(job.fileUrl||'').replace(/'/g,'%27');
-        var safeFileName=(job.fileName||'document').replace(/'/g,'');
-        var safeName=(job.name||'').replace(/'/g,'');
-        var configJson=JSON.stringify(config).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+
         el.innerHTML=
           '<div class="job-token">'+job.token+'</div>'+
           '<div class="job-info">'+
@@ -914,10 +917,11 @@ function loadJobsFromServer(){
             '</div>'+
           '</div>'+
           '<div class="job-actions">'+
-            '<button class="btn-approve" onclick="approveJob(\''+cardId+'\',\''+job.token+'\',\''+safeName+'\',\''+safeFileUrl+'\',\''+safeFileName+'\',\''+job.id+'\',\''+configJson+'\')">✓ Approve & Print</button>'+
-            '<button class="btn-reject" onclick="rejectJob(\''+cardId+'\',\''+job.id+'\')">Reject</button>'+
+            '<button class="btn-approve" onclick="approveJobById(\''+cardId+'\',\''+job.id+'\')">✓ Approve & Print</button>'+
+            '<button class="btn-reject" onclick="rejectJobById(\''+cardId+'\',\''+job.id+'\')">Reject</button>'+
             '<div class="job-time">'+formatTime(job.createdAt)+'</div>'+
           '</div>';
+
         var queue=document.getElementById('jobQueue');
         if(urgent){var fn=queue.querySelector('.job-card.normal');fn?queue.insertBefore(el,fn):queue.appendChild(el);}
         else queue.appendChild(el);
@@ -937,13 +941,21 @@ function formatTime(ts){
   return d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
 }
 
-// ── Operator actions ──
-function approveJob(id,token,name,fileUrl,fileName,serverId,configJson){
-  var card=document.getElementById(id);if(!card)return;
+// ── Called from server-loaded job cards ──
+function approveJobById(cardId,serverId){
+  var job=jobDataStore[serverId];
+  if(!job){console.log('Job not found:',serverId);return;}
+  var config={color:job.color,sides:job.sides,copies:job.copies,pages:job.pages,colorRanges:job.colorRanges||[]};
+  approveJob(cardId,job.token,job.name,job.fileUrl,job.fileName,serverId,config);
+}
 
-  // Parse config
-  var config={};
-  try{config=typeof configJson==='string'?JSON.parse(configJson.replace(/\\'/g,"'")):configJson;}catch(e){}
+function rejectJobById(cardId,serverId){
+  rejectJob(cardId,serverId);
+}
+
+// ── Operator actions ──
+function approveJob(id,token,name,fileUrl,fileName,serverId,config){
+  var card=document.getElementById(id);if(!card)return;
 
   // Open file in new tab — operator prints from there
   if(fileUrl){
@@ -960,7 +972,7 @@ function approveJob(id,token,name,fileUrl,fileName,serverId,configJson){
     '📋 Copies: <b style="color:var(--text)">'+(config.copies||1)+'</b><br>'+
     '↔️ Sides: <b style="color:var(--text)">'+(config.sides==='double'?'Double sided':'Single sided')+'</b>'+
     (config.colorRanges&&config.colorRanges.length?'<br>🌈 Colour pages: <b style="color:var(--text)">'+config.colorRanges.join(', ')+'</b>':'')+
-    '<div style="margin-top:4px;font-size:10px;color:var(--muted);">File opened in new tab → press Ctrl+P to print</div>'+
+    '<div style="margin-top:4px;font-size:10px;color:var(--muted);">File opened in new tab — press Ctrl+P to print</div>'+
     '<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--blue-border);">'+
       '<button onclick="markDone(\''+id+'\',\''+token+'\',\''+name+'\',\''+(serverId||'')+'\');" style="width:100%;padding:8px;background:var(--green);color:var(--bg);border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:\'DM Sans\',sans-serif;">✓ Mark as Printed</button>'+
     '</div>';
