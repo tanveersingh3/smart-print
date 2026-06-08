@@ -37,6 +37,12 @@ const upload = multer({ storage });
 
 // Serve frontend
 app.use(express.static(path.join(__dirname, 'public')));
+app.get('/student', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'student.html'));
+});
+app.get('/operator', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'operator.html'));
+});
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
