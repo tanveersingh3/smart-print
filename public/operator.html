@@ -178,6 +178,9 @@ updateClock();
 setInterval(updateClock,1000);
 
 // ── Load jobs ──
+// Track approved job IDs locally to prevent reload
+var approvedIds={};
+
 function loadJobs(){
   fetch(BACKEND_URL+'/api/jobs')
     .then(function(r){return r.json();})
@@ -187,7 +190,10 @@ function loadJobs(){
 
       jobs.forEach(function(job){
         var cardId='job-'+job.id;
+        // Skip if already shown OR already approved locally
         if(document.getElementById(cardId))return;
+        if(approvedIds[job.id])return;
+
         jobDataStore[job.id]=job;
 
         var urgent=job.urgent;
@@ -253,36 +259,31 @@ function approveJob(cardId,serverId){
   var card=document.getElementById(cardId);if(!card)return;
   var job=jobDataStore[serverId];if(!job)return;
 
-  // Prevent double click
+  // Prevent double trigger — mark locally AND in Firebase immediately
   delete jobDataStore[serverId];
+  approvedIds[serverId]=true;
   var btn=document.getElementById('approve-btn-'+serverId);
   if(btn)btn.disabled=true;
 
-  // Fetch file as blob and print
+  // Mark as approved in Firebase immediately so loadJobs won't reload it
+  fetch(BACKEND_URL+'/api/jobs/'+serverId+'/approve',{method:'PATCH'}).catch(function(){});
+
+  // Fetch file as blob and open print dialog
   if(job.fileUrl){
     fetch(job.fileUrl)
       .then(function(r){return r.blob();})
       .then(function(blob){
-        var ext=(job.fileName||'').split('.').pop().toLowerCase();
-        var type=blob.type||'application/pdf';
         var blobUrl=URL.createObjectURL(blob);
         var printWin=window.open(blobUrl,'_blank');
         if(printWin){
           printWin.onload=function(){
-            setTimeout(function(){
-              printWin.print();
-            },500);
+            setTimeout(function(){try{printWin.print();}catch(e){}},500);
           };
-          // Fallback if onload doesn't fire
-          setTimeout(function(){
-            try{printWin.print();}catch(e){}
-          },2000);
+          setTimeout(function(){try{printWin.print();}catch(e){}},2000);
         }
       })
       .catch(function(e){
-        // Last fallback
         window.open(job.fileUrl,'_blank');
-        console.log('Blob fetch failed:',e);
       });
   }
 
@@ -296,7 +297,7 @@ function approveJob(cardId,serverId){
     '📋 Copies: <b style="color:var(--text)">'+job.copies+'</b><br>'+
     '↔️ Sides: <b style="color:var(--text)">'+(job.sides==='double'?'Double sided':'Single sided')+'</b>'+
     (job.colorRanges&&job.colorRanges.length?'<br>🌈 Colour pages: <b style="color:var(--text)">'+job.colorRanges.join(', ')+'</b>':'')+
-    '<div style="font-size:10px;color:var(--muted);margin-top:6px;">✅ Print dialog opened — configure settings and print</div>'+
+    '<div style="font-size:10px;color:var(--muted);margin-top:6px;">✅ Print dialog opened — set copies &amp; mode then print</div>'+
     '<button class="btn-mark-done" onclick="markDone(\''+cardId+'\',\''+job.token+'\',\''+job.name+'\',\''+serverId+'\')">✓ Mark as Printed</button>';
 
   card.className='job-card processing-state';
@@ -306,8 +307,6 @@ function approveJob(cardId,serverId){
   pendingCount=Math.max(0,pendingCount-1);
   processingCount++;
   updateStats();
-
-  fetch(BACKEND_URL+'/api/jobs/'+serverId+'/approve',{method:'PATCH'}).catch(function(){});
 }
 
 function markDone(cardId,token,name,serverId){
@@ -322,7 +321,6 @@ function markDone(cardId,token,name,serverId){
   revenue+=Math.floor(Math.random()*40+10);
   updateStats();
 
-  // Add to history
   var now=new Date();
   var time=now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
   var hist=document.getElementById('historyList');
@@ -345,11 +343,12 @@ function rejectJob(cardId,serverId){
     card.style.opacity='0';card.style.transform='translateX(20px)';
     setTimeout(function(){if(card.parentNode)card.parentNode.removeChild(card);},300);
   }
+  approvedIds[serverId]=true;
+  delete jobDataStore[serverId];
   pendingCount=Math.max(0,pendingCount-1);
   updateStats();
   fetch(BACKEND_URL+'/api/jobs/'+serverId+'/reject',{method:'PATCH'}).catch(function(){});
 
-  // Add to history as rejected
   var hist=document.getElementById('historyList');
   var noJobs=hist.querySelector('div');
   if(noJobs&&noJobs.style.textAlign==='center')hist.innerHTML='';
