@@ -310,6 +310,7 @@ function approveJob(cardId,serverId){
 }
 
 function markDone(cardId,token,name,serverId){
+  fetch(BACKEND_URL+'/api/jobs/'+serverId+'/approve',{method:'PATCH'}).catch(function(){});
   var card=document.getElementById(cardId);
   if(card){
     card.style.transition='opacity 0.4s,transform 0.4s';
@@ -347,8 +348,8 @@ function rejectJob(cardId,serverId){
   delete jobDataStore[serverId];
   pendingCount=Math.max(0,pendingCount-1);
   updateStats();
-  fetch(BACKEND_URL+'/api/jobs/'+serverId+'/reject',{method:'PATCH'}).catch(function(){});
-
+// Mark as processing FIRST — prevents loadJobs from reloading this job
+fetch(BACKEND_URL+'/api/jobs/'+serverId+'/processing',{method:'PATCH'}).catch(function(){});
   var hist=document.getElementById('historyList');
   var noJobs=hist.querySelector('div');
   if(noJobs&&noJobs.style.textAlign==='center')hist.innerHTML='';
@@ -364,7 +365,7 @@ function rejectJob(cardId,serverId){
 
 // Load on start + refresh every 5 seconds
 loadJobs();
-setInterval(loadJobs,5000);
+setInterval(loadJobs,15000);
 </script>
 </body>
 </html>

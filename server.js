@@ -111,6 +111,18 @@ app.get('/api/jobs', async (req, res) => {
 });
 
 // Approve job
+// Mark as processing (prevents reload in operator queue)
+// Mark as processing
+app.patch('/api/jobs/:id/processing', async (req, res) => {
+  try {
+    const db = admin.firestore();
+    await db.collection('jobs').doc(req.params.id)
+            .update({ status: 'processing' });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 app.patch('/api/jobs/:id/approve', async (req, res) => {
   try {
     const db = admin.firestore();
