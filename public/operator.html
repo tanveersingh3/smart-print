@@ -213,7 +213,7 @@ function loadJobs(){
             '<div class="job-time">'+formatTime(job.createdAt)+'</div>'+
           '</div>'+
           '<div class="job-actions">'+
-            '<button class="btn-approve" onclick="approveJob(\''+cardId+'\',\''+job.id+'\')">✓ Approve</button>'+
+            '<button class="btn-approve" id="approve-btn-'+job.id+'" onclick="approveJob(\''+cardId+'\',\''+job.id+'\')">✓ Approve</button>'+
             '<button class="btn-reject" onclick="rejectJob(\''+cardId+'\',\''+job.id+'\')">Reject</button>'+
           '</div>';
 
@@ -253,10 +253,38 @@ function approveJob(cardId,serverId){
   var card=document.getElementById(cardId);if(!card)return;
   var job=jobDataStore[serverId];if(!job)return;
 
-  // Open file
-  if(job.fileUrl)window.open(job.fileUrl,'_blank');
+  // Prevent double click
+  delete jobDataStore[serverId];
+  var btn=document.getElementById('approve-btn-'+serverId);
+  if(btn)btn.disabled=true;
 
-  // Show print settings
+  // Load file in hidden iframe and print it
+  if(job.fileUrl){
+    // Remove any existing print frame
+    var old=document.getElementById('printFrame');
+    if(old)old.parentNode.removeChild(old);
+
+    var iframe=document.createElement('iframe');
+    iframe.id='printFrame';
+    iframe.style.cssText='position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;';
+    iframe.src=job.fileUrl;
+    document.body.appendChild(iframe);
+
+    // Wait for file to load then trigger print dialog
+    iframe.onload=function(){
+      setTimeout(function(){
+        try{
+          iframe.contentWindow.focus();
+          iframe.contentWindow.print();
+        }catch(e){
+          // Fallback — open in new tab if iframe print fails (e.g. CORS)
+          window.open(job.fileUrl,'_blank');
+        }
+      },800);
+    };
+  }
+
+  // Show print settings on card
   var panel=document.createElement('div');
   panel.className='print-panel';
   panel.innerHTML=
@@ -266,11 +294,11 @@ function approveJob(cardId,serverId){
     '📋 Copies: <b style="color:var(--text)">'+job.copies+'</b><br>'+
     '↔️ Sides: <b style="color:var(--text)">'+(job.sides==='double'?'Double sided':'Single sided')+'</b>'+
     (job.colorRanges&&job.colorRanges.length?'<br>🌈 Colour pages: <b style="color:var(--text)">'+job.colorRanges.join(', ')+'</b>':'')+
-    '<div style="font-size:10px;color:var(--muted);margin-top:4px;">File opened in new tab — press Ctrl+P to print</div>'+
+    '<div style="font-size:10px;color:var(--muted);margin-top:4px;">Print dialog opening automatically...</div>'+
     '<button class="btn-mark-done" onclick="markDone(\''+cardId+'\',\''+job.token+'\',\''+job.name+'\',\''+serverId+'\')">✓ Mark as Printed</button>';
 
   card.className='job-card processing-state';
-  card.querySelector('.job-actions').innerHTML='<div style="color:var(--blue);font-size:12px;font-weight:600;">🖨️ Ready</div>';
+  card.querySelector('.job-actions').innerHTML='<div style="color:var(--blue);font-size:12px;font-weight:600;">🖨️ Printing…</div>';
   card.querySelector('.job-body').appendChild(panel);
 
   pendingCount=Math.max(0,pendingCount-1);
