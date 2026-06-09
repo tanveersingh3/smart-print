@@ -258,30 +258,32 @@ function approveJob(cardId,serverId){
   var btn=document.getElementById('approve-btn-'+serverId);
   if(btn)btn.disabled=true;
 
-  // Load file in hidden iframe and print it
+  // Fetch file as blob and print
   if(job.fileUrl){
-    // Remove any existing print frame
-    var old=document.getElementById('printFrame');
-    if(old)old.parentNode.removeChild(old);
-
-    var iframe=document.createElement('iframe');
-    iframe.id='printFrame';
-    iframe.style.cssText='position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;';
-    iframe.src=job.fileUrl;
-    document.body.appendChild(iframe);
-
-    // Wait for file to load then trigger print dialog
-    iframe.onload=function(){
-      setTimeout(function(){
-        try{
-          iframe.contentWindow.focus();
-          iframe.contentWindow.print();
-        }catch(e){
-          // Fallback — open in new tab if iframe print fails (e.g. CORS)
-          window.open(job.fileUrl,'_blank');
+    fetch(job.fileUrl)
+      .then(function(r){return r.blob();})
+      .then(function(blob){
+        var ext=(job.fileName||'').split('.').pop().toLowerCase();
+        var type=blob.type||'application/pdf';
+        var blobUrl=URL.createObjectURL(blob);
+        var printWin=window.open(blobUrl,'_blank');
+        if(printWin){
+          printWin.onload=function(){
+            setTimeout(function(){
+              printWin.print();
+            },500);
+          };
+          // Fallback if onload doesn't fire
+          setTimeout(function(){
+            try{printWin.print();}catch(e){}
+          },2000);
         }
-      },800);
-    };
+      })
+      .catch(function(e){
+        // Last fallback
+        window.open(job.fileUrl,'_blank');
+        console.log('Blob fetch failed:',e);
+      });
   }
 
   // Show print settings on card
@@ -294,7 +296,7 @@ function approveJob(cardId,serverId){
     '📋 Copies: <b style="color:var(--text)">'+job.copies+'</b><br>'+
     '↔️ Sides: <b style="color:var(--text)">'+(job.sides==='double'?'Double sided':'Single sided')+'</b>'+
     (job.colorRanges&&job.colorRanges.length?'<br>🌈 Colour pages: <b style="color:var(--text)">'+job.colorRanges.join(', ')+'</b>':'')+
-    '<div style="font-size:10px;color:var(--muted);margin-top:4px;">Print dialog opening automatically...</div>'+
+    '<div style="font-size:10px;color:var(--muted);margin-top:6px;">✅ Print dialog opened — configure settings and print</div>'+
     '<button class="btn-mark-done" onclick="markDone(\''+cardId+'\',\''+job.token+'\',\''+job.name+'\',\''+serverId+'\')">✓ Mark as Printed</button>';
 
   card.className='job-card processing-state';
