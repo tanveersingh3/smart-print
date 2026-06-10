@@ -276,11 +276,11 @@ function approveJob(cardId,serverId){
         var blobUrl=URL.createObjectURL(blob);
         var printWin=window.open(blobUrl,'_blank');
         if(printWin){
-          printWin.onload=function(){
-            setTimeout(function(){try{printWin.print();}catch(e){}},500);
-          };
-          setTimeout(function(){try{printWin.print();}catch(e){}},2000);
-        }
+  printWin.onload=function(){
+    setTimeout(function(){try{printWin.print();}catch(e){}},500);
+  };
+}
+        
       })
       .catch(function(e){
         window.open(job.fileUrl,'_blank');
