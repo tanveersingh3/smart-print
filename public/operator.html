@@ -271,19 +271,28 @@ function approveJob(cardId,serverId){
   // Fetch file as blob and open print dialog
   if(job.fileUrl){
     fetch(job.fileUrl)
-      .then(function(r){return r.blob();})
+      .then(function(r){
+        if(!r.ok)throw new Error('Download failed: '+r.status);
+        return r.blob();
+      })
       .then(function(blob){
         var blobUrl=URL.createObjectURL(blob);
         var printWin=window.open(blobUrl,'_blank');
         if(printWin){
-  printWin.onload=function(){
-    setTimeout(function(){try{printWin.print();}catch(e){}},500);
-  };
-}
-        
+          printWin.onload=function(){
+            setTimeout(function(){
+              try{printWin.print();}catch(e){}
+              // Revoke blob URL after print dialog opens to free memory
+              setTimeout(function(){URL.revokeObjectURL(blobUrl);},60000);
+            },500);
+          };
+        }
       })
       .catch(function(e){
-        window.open(job.fileUrl,'_blank');
+        console.error('Could not open file for printing:',e);
+        // Show error on the card instead of opening a stray tab
+        var actionsEl=card.querySelector('.job-actions');
+        if(actionsEl)actionsEl.innerHTML='<div style="color:var(--red);font-size:11px;">⚠️ File load failed</div>';
       });
   }
 
