@@ -265,8 +265,9 @@ function approveJob(cardId,serverId){
   var btn=document.getElementById('approve-btn-'+serverId);
   if(btn)btn.disabled=true;
 
-  // Mark as approved in Firebase immediately so loadJobs won't reload it
-  fetch(BACKEND_URL+'/api/jobs/'+serverId+'/approve',{method:'PATCH'}).catch(function(){});
+  // Mark as processing FIRST — this removes it from /api/jobs (pending only)
+  // so loadJobs() can never re-add this card and trigger a second open
+  fetch(BACKEND_URL+'/api/jobs/'+serverId+'/processing',{method:'PATCH'}).catch(function(){});
 
   // Fetch file as blob and open print dialog
   if(job.fileUrl){
@@ -282,7 +283,6 @@ function approveJob(cardId,serverId){
           printWin.onload=function(){
             setTimeout(function(){
               try{printWin.print();}catch(e){}
-              // Revoke blob URL after print dialog opens to free memory
               setTimeout(function(){URL.revokeObjectURL(blobUrl);},60000);
             },500);
           };
@@ -290,7 +290,6 @@ function approveJob(cardId,serverId){
       })
       .catch(function(e){
         console.error('Could not open file for printing:',e);
-        // Show error on the card instead of opening a stray tab
         var actionsEl=card.querySelector('.job-actions');
         if(actionsEl)actionsEl.innerHTML='<div style="color:var(--red);font-size:11px;">⚠️ File load failed</div>';
       });
