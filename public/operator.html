@@ -17,8 +17,6 @@
   --radius:12px;--radius-sm:8px;
 }
 body{background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;min-height:100vh;background-image:radial-gradient(ellipse at 10% 0%,rgba(76,175,112,0.06) 0%,transparent 50%);}
-
-/* ── Nav ── */
 nav{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:rgba(10,15,10,0.98);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100;}
 .logo{font-size:20px;font-weight:800;letter-spacing:-0.03em;}
 .logo span{color:var(--green);}
@@ -28,13 +26,9 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 2
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
 .live-txt{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--green);letter-spacing:0.1em;}
 .nav-time{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);}
-
-/* ── Layout ── */
 .layout{display:grid;grid-template-columns:1fr 320px;gap:0;min-height:calc(100vh - 53px);}
 .main-col{padding:24px 28px;border-right:1px solid var(--border);}
 .side-col{padding:24px 20px;background:var(--surface);}
-
-/* ── Stats ── */
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
 .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;}
 .stat-num{font-family:'Sora',sans-serif;font-size:32px;font-weight:800;letter-spacing:-0.04em;line-height:1;}
@@ -43,19 +37,14 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 2
 .stat.s-orange .stat-num{color:var(--orange);}
 .stat.s-blue .stat-num{color:var(--blue);}
 .stat.s-red .stat-num{color:var(--red);}
-
-/* ── Queue header ── */
 .queue-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
 .queue-title{font-size:16px;font-weight:700;}
 .queue-badge{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);padding:4px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:100px;}
-
-/* ── Job cards ── */
 .job-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start;position:relative;overflow:hidden;transition:border-color 0.2s;}
 .job-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px;}
 .job-card.priority::before{background:var(--orange);}
 .job-card.normal::before{background:var(--green);}
-.job-card.processing-state{background:var(--blue-dim);border-color:var(--blue-border);}
-.job-card.done-state{opacity:0.5;}
+.job-card.processing-state{background:var(--green-dim);border-color:var(--green-border);}
 .job-token{font-family:'Sora',sans-serif;font-size:26px;font-weight:800;color:var(--muted);min-width:44px;text-align:center;line-height:1;letter-spacing:-0.04em;}
 .job-body{flex:1;}
 .job-name{font-size:14px;font-weight:600;margin-bottom:3px;}
@@ -73,18 +62,13 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 2
 .job-actions{display:flex;flex-direction:column;gap:6px;align-items:flex-end;}
 .btn-approve{padding:9px 18px;background:var(--green);color:var(--bg);border:none;border-radius:var(--radius-sm);font-family:'Sora',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
 .btn-approve:hover{background:#5cc880;box-shadow:0 4px 16px rgba(76,175,112,0.3);}
+.btn-approve:disabled{opacity:0.4;cursor:not-allowed;}
 .btn-reject{padding:7px 14px;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;cursor:pointer;transition:all 0.2s;font-family:'Sora',sans-serif;}
 .btn-reject:hover{border-color:var(--red);color:var(--red);}
-
-/* ── Print settings panel ── */
-.print-panel{background:rgba(90,170,240,0.06);border:1px solid var(--blue-border);border-radius:var(--radius-sm);padding:12px 14px;margin-top:10px;font-size:11px;color:#8ac4e8;line-height:2;}
-.print-panel-title{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:var(--blue);margin-bottom:6px;letter-spacing:0.1em;}
+.print-panel{background:rgba(76,175,112,0.06);border:1px solid var(--green-border);border-radius:var(--radius-sm);padding:12px 14px;margin-top:10px;font-size:11px;color:#8ac4e8;line-height:2;}
+.print-panel-title{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:var(--green);margin-bottom:6px;letter-spacing:0.1em;}
 .btn-mark-done{width:100%;padding:8px;background:var(--green);color:var(--bg);border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;cursor:pointer;margin-top:8px;font-family:'Sora',sans-serif;}
-
-/* ── Side column ── */
 .side-title{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
-
-/* ── History ── */
 .hist-item{padding:10px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
 .hist-item:last-child{border-bottom:none;}
 .hist-token{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--muted);min-width:28px;}
@@ -94,20 +78,14 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 2
 .hist-badge{padding:2px 8px;border-radius:100px;font-size:10px;font-weight:600;}
 .hist-badge.done{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border);}
 .hist-badge.rejected{background:var(--red-dim);color:var(--red);border:1px solid var(--red-border);}
-
-/* ── Empty state ── */
 .empty{text-align:center;padding:48px 20px;color:var(--muted);}
 .empty-icon{font-size:36px;margin-bottom:10px;}
 .empty-text{font-size:14px;}
-
-/* ── Animations ── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--green-border);border-radius:var(--radius-sm);padding:12px 18px;font-size:13px;color:var(--green);font-weight:500;box-shadow:0 8px 32px rgba(0,0,0,0.4);transform:translateY(20px);opacity:0;transition:all 0.3s;z-index:999;pointer-events:none;}
+.toast.show{transform:translateY(0);opacity:1;}
+.agent-status{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--green-dim);border:1px solid var(--green-border);border-radius:var(--radius-sm);margin-bottom:20px;font-size:12px;color:var(--green);}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
-
-@media(max-width:900px){
-  .layout{grid-template-columns:1fr;}
-  .side-col{border-top:1px solid var(--border);}
-  .stats{grid-template-columns:repeat(2,1fr);}
-}
+@media(max-width:900px){.layout{grid-template-columns:1fr;}.side-col{border-top:1px solid var(--border);}.stats{grid-template-columns:repeat(2,1fr);}}
 </style>
 </head>
 <body>
@@ -124,9 +102,12 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 2
 </nav>
 
 <div class="layout">
-
-  <!-- ── MAIN COLUMN ── -->
   <div class="main-col">
+
+    <!-- Agent status banner -->
+    <div class="agent-status">
+      🖨️ Print agent handles printing automatically — just click Approve and the document prints on the connected printer.
+    </div>
 
     <!-- Stats -->
     <div class="stats">
@@ -136,7 +117,6 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 2
       <div class="stat s-red"><div class="stat-num" id="opRevenue">₹0</div><div class="stat-lbl">REVENUE</div></div>
     </div>
 
-    <!-- Queue -->
     <div class="queue-hdr">
       <div class="queue-title">Print Queue</div>
       <div class="queue-badge" id="queueBadge">Loading...</div>
@@ -151,25 +131,26 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 2
 
   </div>
 
-  <!-- ── SIDE COLUMN ── -->
   <div class="side-col">
     <div class="side-title">Completed today</div>
     <div id="historyList">
       <div style="font-size:12px;color:var(--muted);padding:20px 0;text-align:center;">No jobs completed yet</div>
     </div>
   </div>
-
 </div>
+
+<div class="toast" id="toast"></div>
 
 <script>
 var BACKEND_URL='https://smart-print-production.up.railway.app';
 var jobDataStore={};
+var approvedIds={};
 var pendingCount=0;
 var processingCount=0;
 var doneCount=0;
 var revenue=0;
 
-// ── Clock ──
+// Clock
 function updateClock(){
   var now=new Date();
   document.getElementById('navTime').textContent=now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
@@ -177,10 +158,15 @@ function updateClock(){
 updateClock();
 setInterval(updateClock,1000);
 
-// ── Load jobs ──
-// Track approved job IDs locally to prevent reload
-var approvedIds={};
+// Toast
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},3000);
+}
 
+// Load jobs
 function loadJobs(){
   fetch(BACKEND_URL+'/api/jobs')
     .then(function(r){return r.json();})
@@ -190,7 +176,6 @@ function loadJobs(){
 
       jobs.forEach(function(job){
         var cardId='job-'+job.id;
-        // Skip if already shown OR already approved locally
         if(document.getElementById(cardId))return;
         if(approvedIds[job.id])return;
 
@@ -233,7 +218,7 @@ function loadJobs(){
       document.getElementById('queueBadge').textContent=pendingCount+' pending';
       if(pendingCount===0&&empty)empty.style.display='block';
     })
-    .catch(function(e){console.log('Error:',e);});
+    .catch(function(e){console.log('Error loading jobs:',e);});
 }
 
 function formatTime(ts){
@@ -259,43 +244,17 @@ function approveJob(cardId,serverId){
   var card=document.getElementById(cardId);if(!card)return;
   var job=jobDataStore[serverId];if(!job)return;
 
-  // Prevent double trigger — mark locally AND in Firebase immediately
+  // Prevent double trigger
   delete jobDataStore[serverId];
   approvedIds[serverId]=true;
   var btn=document.getElementById('approve-btn-'+serverId);
   if(btn)btn.disabled=true;
 
-  // Mark as processing FIRST — this removes it from /api/jobs (pending only)
-  // so loadJobs() can never re-add this card and trigger a second open
-  fetch(BACKEND_URL+'/api/jobs/'+serverId+'/processing',{method:'PATCH'}).catch(function(){});
+  // Mark as approved in Firebase
+  // print_agent.py running on shop PC will detect this and print automatically
+  fetch(BACKEND_URL+'/api/jobs/'+serverId+'/approve',{method:'PATCH'}).catch(function(){});
 
-  // Fetch file as blob and open print dialog
-  if(job.fileUrl){
-    fetch(job.fileUrl)
-      .then(function(r){
-        if(!r.ok)throw new Error('Download failed: '+r.status);
-        return r.blob();
-      })
-      .then(function(blob){
-        var blobUrl=URL.createObjectURL(blob);
-        var printWin=window.open(blobUrl,'_blank');
-        if(printWin){
-          printWin.onload=function(){
-            setTimeout(function(){
-              try{printWin.print();}catch(e){}
-              setTimeout(function(){URL.revokeObjectURL(blobUrl);},60000);
-            },500);
-          };
-        }
-      })
-      .catch(function(e){
-        console.error('Could not open file for printing:',e);
-        var actionsEl=card.querySelector('.job-actions');
-        if(actionsEl)actionsEl.innerHTML='<div style="color:var(--red);font-size:11px;">⚠️ File load failed</div>';
-      });
-  }
-
-  // Show print settings on card
+  // Show print settings panel on card — no file opening, no new tab
   var panel=document.createElement('div');
   panel.className='print-panel';
   panel.innerHTML=
@@ -305,24 +264,25 @@ function approveJob(cardId,serverId){
     '📋 Copies: <b style="color:var(--text)">'+job.copies+'</b><br>'+
     '↔️ Sides: <b style="color:var(--text)">'+(job.sides==='double'?'Double sided':'Single sided')+'</b>'+
     (job.colorRanges&&job.colorRanges.length?'<br>🌈 Colour pages: <b style="color:var(--text)">'+job.colorRanges.join(', ')+'</b>':'')+
-    '<div style="font-size:10px;color:var(--muted);margin-top:6px;">✅ Print dialog opened — set copies &amp; mode then print</div>'+
-    '<button class="btn-mark-done" onclick="markDone(\''+cardId+'\',\''+job.token+'\',\''+job.name+'\',\''+serverId+'\')">✓ Mark as Printed</button>';
+    '<div style="font-size:11px;color:var(--green);margin-top:8px;font-weight:600;">✅ Sent to printer — printing automatically via agent</div>'+
+    '<button class="btn-mark-done" onclick="markDone(\''+cardId+'\',\''+job.token+'\',\''+job.name+'\',\''+serverId+'\')">✓ Mark as Done</button>';
 
   card.className='job-card processing-state';
-  card.querySelector('.job-actions').innerHTML='<div style="color:var(--blue);font-size:12px;font-weight:600;">🖨️ Printing…</div>';
+  card.querySelector('.job-actions').innerHTML='<div style="color:var(--green);font-size:12px;font-weight:600;">✅ Printing…</div>';
   card.querySelector('.job-body').appendChild(panel);
 
   pendingCount=Math.max(0,pendingCount-1);
   processingCount++;
   updateStats();
+  showToast('✅ Job #'+job.token+' sent to printer!');
 }
 
 function markDone(cardId,token,name,serverId){
-  fetch(BACKEND_URL+'/api/jobs/'+serverId+'/approve',{method:'PATCH'}).catch(function(){});
   var card=document.getElementById(cardId);
   if(card){
     card.style.transition='opacity 0.4s,transform 0.4s';
-    card.style.opacity='0';card.style.transform='translateX(20px)';
+    card.style.opacity='0';
+    card.style.transform='translateX(20px)';
     setTimeout(function(){if(card.parentNode)card.parentNode.removeChild(card);},400);
   }
   processingCount=Math.max(0,processingCount-1);
@@ -349,29 +309,29 @@ function rejectJob(cardId,serverId){
   var card=document.getElementById(cardId);
   if(card){
     card.style.transition='opacity 0.3s,transform 0.3s';
-    card.style.opacity='0';card.style.transform='translateX(20px)';
+    card.style.opacity='0';
+    card.style.transform='translateX(20px)';
     setTimeout(function(){if(card.parentNode)card.parentNode.removeChild(card);},300);
   }
   approvedIds[serverId]=true;
   delete jobDataStore[serverId];
   pendingCount=Math.max(0,pendingCount-1);
   updateStats();
-// Mark as processing FIRST — prevents loadJobs from reloading this job
-fetch(BACKEND_URL+'/api/jobs/'+serverId+'/processing',{method:'PATCH'}).catch(function(){});
+  fetch(BACKEND_URL+'/api/jobs/'+serverId+'/reject',{method:'PATCH'}).catch(function(){});
+
   var hist=document.getElementById('historyList');
   var noJobs=hist.querySelector('div');
   if(noJobs&&noJobs.style.textAlign==='center')hist.innerHTML='';
-  var job=jobDataStore[serverId];
   var item=document.createElement('div');
   item.className='hist-item';
   item.innerHTML=
-    '<div class="hist-token">'+(job?job.token:'?')+'</div>'+
-    '<div class="hist-info"><div class="hist-name">'+(job?job.name:'Unknown')+'</div><div class="hist-file">Just now</div></div>'+
+    '<div class="hist-token">?</div>'+
+    '<div class="hist-info"><div class="hist-name">Job rejected</div><div class="hist-file">Just now</div></div>'+
     '<div class="hist-badge rejected">✗ Rejected</div>';
   hist.prepend(item);
+  showToast('❌ Job rejected');
 }
 
-// Load on start + refresh every 5 seconds
 loadJobs();
 setInterval(loadJobs,15000);
 </script>
