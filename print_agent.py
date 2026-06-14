@@ -60,12 +60,16 @@ def print_file(file_url, file_name, job_data):
                 f"Adobe Reader not found at:\n{ADOBE}"
             )
 
-        # Print using Adobe Reader
-        subprocess.Popen([
-            ADOBE,
-            "/t",
-            save_path
-        ])
+        # Print using Adobe Reader (hidden/minimized)
+        subprocess.Popen(
+            [
+                ADOBE,
+                "/h",
+                "/t",
+                save_path
+            ],
+            creationflags=subprocess.CREATE_NO_WINDOW
+        )
 
         time.sleep(5)
 
@@ -94,7 +98,7 @@ def check_jobs():
 
         job_id = job.id
 
-        # Prevent duplicates while script is running
+        # Prevent duplicate processing
         if job_id in processed:
             continue
 
