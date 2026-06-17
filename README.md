@@ -1,215 +1,268 @@
-# SmartPrint 🖨️
-### Smart Campus Print Queue System
+# Smart Print 🖨️
 
-A web-based print queue system that eliminates long waiting times and manual configuration errors at school, college, and coaching stationery shops. Students configure and submit print jobs remotely from their phone. The operator approves with one click. A Python agent running on the shop PC automatically downloads and prints the document — no manual steps needed.
+A cloud-based print management system that enables students to submit print jobs remotely while allowing print shop operators to review, approve, and automatically print documents through a local print agent.
 
----
+## Problem Statement
 
-## The Problem
+Traditional printing workflows are inefficient and time-consuming:
 
-Students at coaching centres and colleges waste **10–20 minutes** per visit at the print shop during peak times and exam season.
+* Students must physically visit print shops.
+* Documents are often shared through WhatsApp or pen drives.
+* Print settings need to be communicated manually.
+* Shop owners have to manage multiple orders without a centralized system.
+* Long queues result in wasted time and operational inefficiencies.
 
-The traditional process:
-- Student physically visits shop and joins queue
-- Shares document via USB or WhatsApp
-- Operator manually downloads the file
-- Operator configures settings (B&W/colour, pages, copies) — often incorrectly
-- Verbal back-and-forth causes wrong settings and costly reprints
-- Student waits through all of this standing at the counter
+Smart Print digitizes the entire process by providing an end-to-end cloud-based printing solution.
 
 ---
 
-## The Solution
+## Solution
 
-SmartPrint moves the entire configuration step to the student — before they even leave their room.
+Smart Print allows users to:
 
-The operator's only job is to click **Approve**. Everything else is automatic.
+* Upload documents remotely.
+* Configure print settings such as copies, color mode, and page preferences.
+* Submit print requests through a web interface.
+* Receive a unique token for tracking.
 
----
+Print shop operators can:
 
-## How It Works
+* View incoming requests.
+* Approve or reject jobs.
+* Manage the printing queue efficiently.
 
-```
-Student opens link on phone
-        ↓
-Uploads document + configures all settings
-(B&W/colour, pages, copies, sides, page range)
-        ↓
-Submits job → gets token number + estimated wait time
-        ↓
-Operator sees job on dashboard in real time
-(all settings already filled — nothing to configure)
-        ↓
-Operator clicks Approve ✓
-        ↓
-Python agent on shop PC detects approval in Firebase
-        ↓
-Agent downloads file automatically
-        ↓
-Agent sends to printer — no dialog, no clicks
-        ↓
-Student gets notified → collects printout
-```
+A local Python Print Agent continuously monitors approved jobs and automatically sends them to the connected printer.
 
 ---
 
-## Live Demo
+## System Architecture
 
-| | URL |
-|---|---|
-| 🎓 Student page | https://smart-print-production.up.railway.app/student |
-| 🖥️ Operator dashboard | https://smart-print-production.up.railway.app/operator |
-
----
-
-## Features
-
-### Student Page (mobile-first)
-- Upload PDF, Word, JPG from any device
-- Configure B&W / Full Colour / Mixed (select specific pages for colour)
-- Set copies, sides, paper size, page range
-- Images per sheet layout (1, 2, 4, 6, 9, 12 images per sheet)
-- Urgent print option (moves to front of queue)
-- UPI payment toggle
-- Live queue status — jobs ahead + estimated wait time
-- Token number displayed after submission
-
-### Operator Dashboard (desktop)
-- Real-time job queue — auto-refreshes every 5 seconds
-- All print settings pre-filled by student — nothing to configure
-- One-click Approve button
-- Reject option with reason
-- Live stats — pending, printing, done today, revenue
-- Completed jobs history sidebar
-- Live clock
-
-### Print Agent (runs on shop PC)
-- Lightweight Python script
-- Runs silently in the background
-- Watches Firebase for approved jobs every 3 seconds
-- Downloads file automatically to shop PC
-- Sends directly to printer — **no dialog, no clicks, fully automatic**
-- Marks job as done in Firebase after printing
-- Starts automatically on Windows boot
-
----
-
-## Why Automatic Printing Needs a Local Agent
-
-Browsers cannot send files directly to printers — this is a security restriction built into every browser that cannot be bypassed by any code. This is the same reason why every professional print management system (PaperCut, PrinterLogic, UniPrint) uses a local agent running on the shop PC.
-
-The Python print agent is the piece that makes printing truly automatic. The browser handles the queue and approval UI. The agent handles the actual printing.
+Student
+   │
+   ▼
+Web Application
+(HTML/CSS/JavaScript)
+   │
+   ▼
+Node.js + Express Backend
+(Hosted on Railway)
+   │
+   ▼
+Firebase Firestore
+   │
+   ├───────────────► Operator Dashboard
+   │
+   ▼
+Python Print Agent
+(Local Shop Computer)
+   │
+   ▼
+Printer
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Student & Operator UI | HTML, CSS, Vanilla JavaScript |
-| Backend API | Node.js + Express |
-| Database | Firebase Firestore (real-time) |
-| File Storage | Railway Persistent Volume |
-| Hosting | Railway |
-| Print Agent | Python 3 |
+### Frontend
+
+* HTML5
+* CSS3
+* Vanilla JavaScript
+
+### Backend
+
+* Node.js
+* Express.js
+
+### Database
+
+* Firebase Firestore
+
+### File Upload Handling
+
+* Multer
+
+### Cloud Hosting
+
+* Railway
+
+### Print Automation
+
+* Python
+
+### Printer Integration
+
+* Windows Print APIs / Adobe Reader
 
 ---
 
-## Project Structure
+## Key Features
 
-```
-smart-print/
-├── public/
-│   ├── student.html       # Student submission page (mobile-first)
-│   └── operator.html      # Operator dashboard (desktop)
-├── server.js              # Node.js backend API
-├── print_agent.py         # Python print agent (runs on shop PC)
-├── package.json
-├── README.md
-└── .gitignore
-```
+### Student Portal
+
+* Upload PDF, DOC, DOCX, and image files
+* Configure print preferences
+* Specify copies and page settings
+* Submit print requests remotely
+* Receive job tokens
+
+URL :- https://smart-print-production.up.railway.app/student
+
+### Operator Dashboard
+
+* View all incoming jobs
+* Approve or reject requests
+* Monitor job queue
+* Manage print workflow
+
+URL :- https://smart-print-production.up.railway.app/operator
+
+### Automated Printing
+
+* Local Python Print Agent
+* Automatic job detection
+* File download and print execution
+* Status synchronization with database
 
 ---
 
-## API Endpoints
+## Project Workflow
 
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | /api/jobs | Submit a new print job with file |
-| GET | /api/jobs | Get all pending jobs |
-| PATCH | /api/jobs/:id/approve | Approve a job |
-| PATCH | /api/jobs/:id/reject | Reject a job |
-| PATCH | /api/jobs/:id/processing | Mark as processing (prevents reload) |
+### 1. Student Submission
+
+The student uploads a document and selects print preferences.
+
+Upload File
+↓
+Select Print Settings
+↓
+Submit Request
+
+### 2. Backend Processing
+
+The Node.js backend:
+
+* Receives the request
+* Stores uploaded files
+* Generates a unique token
+* Saves job details in Firestore
+
+### 3. Operator Approval
+
+The operator reviews the request and approves it.
+
+Pending
+↓
+Approved
+
+### 4. Automatic Printing
+
+The Python Print Agent:
+
+* Detects approved jobs
+* Downloads the file
+* Sends it to the printer
+* Updates job status
+
+Approved
+↓
+Downloading
+↓
+Printing
+↓
+Completed
 
 ---
 
-## Setup Guide
+## Why This Architecture?
 
-### 1. Backend — Deploy to Railway
+Web browsers cannot directly access printers due to security restrictions.
+
+To overcome this limitation:
+
+1. The web application handles job submission.
+2. Firestore acts as a central communication layer.
+3. A local Python service acts as a bridge between the cloud and the printer.
+
+This architecture provides:
+
+* Security
+* Scalability
+* Reliability
+* Hardware independence
+
+---
+
+## Future Enhancements
+
+* Real-time Firestore listeners
+* Payment gateway integration
+* Student order tracking
+* Multi-printer support
+* Queue prioritization
+* Print cost estimation
+* Authentication and user accounts
+* Mobile application
+* Print analytics dashboard
+
+---
+
+## Installation
+
+### Clone Repository
 
 ```bash
-git clone https://github.com/tanveersingh3/smart-print
+git clone https://github.com/tanveersingh3/smart-print.git
 cd smart-print
+```
+
+### Install Dependencies
+
+```bash
 npm install
 ```
 
-Add these environment variables in Railway dashboard:
-```
-GOOGLE_APPLICATION_CREDENTIALS_JSON = <paste full Firebase service account JSON>
-RAILWAY_PUBLIC_DOMAIN = smart-print-production.up.railway.app
-PORT = 8080
-```
+### Configure Firebase Credentials
 
-Push to GitHub — Railway auto-deploys on every push.
+Create the required environment variables or Firebase service account configuration.
 
-### 2. Print Agent — Setup on Shop PC
+### Start Backend
 
-**Step 1** — Install Python from python.org (tick "Add to PATH")
-
-**Step 2** — Install required libraries:
 ```bash
-pip install firebase-admin requests
+npm start
 ```
 
-**Step 3** — Copy these two files to shop PC (e.g. C:\SmartPrint\):
-- `print_agent.py`
-- `serviceAccount.json`
+### Start Print Agent
 
-**Step 4** — Run the agent:
 ```bash
 python print_agent.py
 ```
 
-**Step 5** — Keep it running in the background. Minimise the window.
+---
 
-### 3. Auto-start on Windows Boot
+## Use Cases
 
-Create `start.bat` in `C:\SmartPrint\`:
-```bat
-@echo off
-cd C:\SmartPrint
-python print_agent.py
-```
-
-Move this file to `shell:startup` folder so it runs automatically every morning.
+* College Print Shops
+* University Libraries
+* Coaching Centers
+* Corporate Printing Services
+* Internet Cafés
+* Shared Office Spaces
 
 ---
 
-## Current Status
+## Impact
 
-| Component | Status |
-|---|---|
-| Student submission page | ✅ Built and live |
-| Operator dashboard | ✅ Built and live |
-| Real-time job queue | ✅ Working across browsers |
-| File upload and storage | ✅ Working (persistent volume) |
-| Print agent | ✅ Built and tested locally |
-| Shop PC deployment | 🔄 Testing at coaching centre this week |
-| Real student testing | 🔄 Planned — 10 students over 3 days |
+Smart Print reduces waiting time, eliminates manual file transfer, streamlines print operations, and creates a seamless cloud-to-printer workflow for both customers and print shop operators.
 
 ---
 
-## Built By
+## Team
 
-**Team Loan Lelo**
-POC built for OkCredit internship programme
+Built as part of an effort to modernize traditional printing workflows through cloud technologies and automation.
+
+---
+
+## License
+
+This project is intended for educational and demonstration purposes.
