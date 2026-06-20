@@ -22,6 +22,7 @@ processed = set()
 # =========================
 # PDF B&W CONVERTER
 # =========================
+ADOBE = r"C:\Program Files (x86)\Adobe\Reader 8.0\Reader\AcroRd32.exe"
 
 def convert_to_bw(input_pdf, output_pdf):
 
