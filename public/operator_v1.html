@@ -84,22 +84,8 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 2
 .toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--green-border);border-radius:var(--radius-sm);padding:12px 18px;font-size:13px;color:var(--green);font-weight:500;box-shadow:0 8px 32px rgba(0,0,0,0.4);transform:translateY(20px);opacity:0;transition:all 0.3s;z-index:999;pointer-events:none;}
 .toast.show{transform:translateY(0);opacity:1;}
 .agent-status{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--green-dim);border:1px solid var(--green-border);border-radius:var(--radius-sm);margin-bottom:20px;font-size:12px;color:var(--green);}
-.analytics-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:24px;}
-.analytics-wrap h3{font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px;}
-.ai-summary-box{font-size:12px;color:#93c5fd;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 14px;margin-bottom:14px;line-height:1.7;}
-.analytics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;}
-.a-stat{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;}
-.a-stat-num{font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.03em;}
-.a-stat-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:2px;font-family:'JetBrains Mono',monospace;}
-.analytics-meta{font-size:11px;color:var(--muted);margin-bottom:12px;}
-.analytics-meta strong{color:var(--text);}
-.range-btns{display:flex;gap:6px;}
-.range-btn{padding:5px 14px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--muted);cursor:pointer;font-size:12px;font-family:'Sora',sans-serif;transition:all 0.15s;}
-.range-btn:hover{border-color:var(--green);color:var(--green);}
-.range-btn.active{background:var(--green);color:var(--bg);border-color:var(--green);font-weight:600;}
-.analytics-loading{font-size:12px;color:var(--muted);padding:20px 0;text-align:center;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
-@media(max-width:900px){.layout{grid-template-columns:1fr;}.side-col{border-top:1px solid var(--border);}.stats{grid-template-columns:repeat(2,1fr);}.analytics-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:900px){.layout{grid-template-columns:1fr;}.side-col{border-top:1px solid var(--border);}.stats{grid-template-columns:repeat(2,1fr);}}
 </style>
 </head>
 <body>
@@ -118,13 +104,9 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 2
 <div class="layout">
   <div class="main-col">
 
+    <!-- Agent status banner -->
     <div class="agent-status">
       🖨️ Print agent handles printing automatically — just click Approve and the document prints on the connected printer.
-    </div>
-
-    <!-- FEATURE 4: AI Analytics -->
-    <div class="analytics-wrap" id="analyticsPanel">
-      <p class="analytics-loading">⏳ Loading analytics…</p>
     </div>
 
     <!-- Stats -->
@@ -167,8 +149,8 @@ var pendingCount=0;
 var processingCount=0;
 var doneCount=0;
 var revenue=0;
-var currentRange='7';
 
+// Clock
 function updateClock(){
   var now=new Date();
   document.getElementById('navTime').textContent=now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
@@ -176,65 +158,38 @@ function updateClock(){
 updateClock();
 setInterval(updateClock,1000);
 
+// Toast
 function showToast(msg){
   var t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
+  t.textContent=msg;
+  t.classList.add('show');
   setTimeout(function(){t.classList.remove('show');},3000);
 }
 
-// FEATURE 4: AI Analytics
-async function loadAnalytics(range){
-  currentRange=range||'7';
-  var panel=document.getElementById('analyticsPanel');
-  panel.innerHTML='<p class="analytics-loading">⏳ Loading analytics…</p>';
-  try{
-    var res=await fetch(BACKEND_URL+'/api/analytics?range='+currentRange);
-    var data=await res.json();
-    if(!data.success)throw new Error(data.error);
-    var s=data.stats;
-    panel.innerHTML=
-      '<h3>📊 Analytics — '+s.period+'</h3>'+
-      '<p class="ai-summary-box">'+data.aiSummary+'</p>'+
-      '<div class="analytics-grid">'+
-        aBox(s.totalJobs,'Total Jobs')+aBox(s.totalPages,'Pages')+
-        aBox(s.completedJobs,'Completed')+aBox(s.urgentJobs,'Urgent')+
-        aBox(s.colorJobs,'Colour')+aBox(s.bwJobs,'B&W')+
-        aBox(s.paidJobs,'Paid')+aBox(s.unpaidJobs,'Unpaid')+
-      '</div>'+
-      '<p class="analytics-meta">Peak Hour: <strong>'+s.peakHour+'</strong> &nbsp;·&nbsp; Avg Copies: <strong>'+s.avgCopies+'</strong> &nbsp;·&nbsp; '+s.colorVsBwRatio+'</p>'+
-      '<div class="range-btns">'+rBtn('1')+rBtn('7')+rBtn('30')+'</div>';
-  }catch(e){
-    panel.innerHTML='<p style="font-size:12px;color:var(--red);padding:12px 0;">Failed to load analytics: '+e.message+'</p>';
-  }
-}
-
-function aBox(num,label){
-  return '<div class="a-stat"><div class="a-stat-num">'+(num||0)+'</div><div class="a-stat-lbl">'+label+'</div></div>';
-}
-function rBtn(val){
-  var label=val==='1'?'Today':val==='7'?'7 Days':'30 Days';
-  var cls=val===currentRange?'range-btn active':'range-btn';
-  return '<button class="'+cls+'" onclick="loadAnalytics(\''+val+'\')">'+label+'</button>';
-}
-
+// Load jobs
 function loadJobs(){
   fetch(BACKEND_URL+'/api/jobs')
     .then(function(r){return r.json();})
     .then(function(jobs){
       var queue=document.getElementById('jobQueue');
       var empty=document.getElementById('emptyState');
+
       jobs.forEach(function(job){
         var cardId='job-'+job.id;
         if(document.getElementById(cardId))return;
         if(approvedIds[job.id])return;
+
         jobDataStore[job.id]=job;
+
         var urgent=job.urgent;
         var colorTagClass=job.color==='color'?'color':job.color==='mixed'?'mixed':'bw';
         var colorTagText=job.color==='color'?'All Colour':job.color==='mixed'?'🎨 Mixed':'All B&W';
+
         var el=document.createElement('div');
         el.className='job-card '+(urgent?'priority':'normal');
         el.id=cardId;
         el.style.animation='fadeUp 0.35s ease both';
+
         el.innerHTML=
           '<div class="job-token">'+job.token+'</div>'+
           '<div class="job-body">'+
@@ -252,11 +207,14 @@ function loadJobs(){
             '<button class="btn-approve" id="approve-btn-'+job.id+'" onclick="approveJob(\''+cardId+'\',\''+job.id+'\')">✓ Approve</button>'+
             '<button class="btn-reject" onclick="rejectJob(\''+cardId+'\',\''+job.id+'\')">Reject</button>'+
           '</div>';
+
         if(empty)empty.style.display='none';
         if(urgent){var fn=queue.querySelector('.job-card.normal');fn?queue.insertBefore(el,fn):queue.appendChild(el);}
         else queue.appendChild(el);
-        pendingCount++;updateStats();
+        pendingCount++;
+        updateStats();
       });
+
       document.getElementById('queueBadge').textContent=pendingCount+' pending';
       if(pendingCount===0&&empty)empty.style.display='block';
     })
@@ -285,10 +243,18 @@ function updateStats(){
 function approveJob(cardId,serverId){
   var card=document.getElementById(cardId);if(!card)return;
   var job=jobDataStore[serverId];if(!job)return;
-  delete jobDataStore[serverId];approvedIds[serverId]=true;
+
+  // Prevent double trigger
+  delete jobDataStore[serverId];
+  approvedIds[serverId]=true;
   var btn=document.getElementById('approve-btn-'+serverId);
   if(btn)btn.disabled=true;
+
+  // Mark as approved in Firebase
+  // print_agent.py running on shop PC will detect this and print automatically
   fetch(BACKEND_URL+'/api/jobs/'+serverId+'/approve',{method:'PATCH'}).catch(function(){});
+
+  // Show print settings panel on card — no file opening, no new tab
   var panel=document.createElement('div');
   panel.className='print-panel';
   panel.innerHTML=
@@ -300,29 +266,38 @@ function approveJob(cardId,serverId){
     (job.colorRanges&&job.colorRanges.length?'<br>🌈 Colour pages: <b style="color:var(--text)">'+job.colorRanges.join(', ')+'</b>':'')+
     '<div style="font-size:11px;color:var(--green);margin-top:8px;font-weight:600;">✅ Sent to printer — printing automatically via agent</div>'+
     '<button class="btn-mark-done" onclick="markDone(\''+cardId+'\',\''+job.token+'\',\''+job.name+'\',\''+serverId+'\')">✓ Mark as Done</button>';
+
   card.className='job-card processing-state';
   card.querySelector('.job-actions').innerHTML='<div style="color:var(--green);font-size:12px;font-weight:600;">✅ Printing…</div>';
   card.querySelector('.job-body').appendChild(panel);
-  pendingCount=Math.max(0,pendingCount-1);processingCount++;
-  updateStats();showToast('✅ Job #'+job.token+' sent to printer!');
+
+  pendingCount=Math.max(0,pendingCount-1);
+  processingCount++;
+  updateStats();
+  showToast('✅ Job #'+job.token+' sent to printer!');
 }
 
 function markDone(cardId,token,name,serverId){
   var card=document.getElementById(cardId);
   if(card){
     card.style.transition='opacity 0.4s,transform 0.4s';
-    card.style.opacity='0';card.style.transform='translateX(20px)';
+    card.style.opacity='0';
+    card.style.transform='translateX(20px)';
     setTimeout(function(){if(card.parentNode)card.parentNode.removeChild(card);},400);
   }
-  processingCount=Math.max(0,processingCount-1);doneCount++;
-  revenue+=Math.floor(Math.random()*40+10);updateStats();
+  processingCount=Math.max(0,processingCount-1);
+  doneCount++;
+  revenue+=Math.floor(Math.random()*40+10);
+  updateStats();
+
   var now=new Date();
   var time=now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
   var hist=document.getElementById('historyList');
   var noJobs=hist.querySelector('div');
   if(noJobs&&noJobs.style.textAlign==='center')hist.innerHTML='';
   var item=document.createElement('div');
-  item.className='hist-item';item.style.animation='fadeUp 0.3s ease both';
+  item.className='hist-item';
+  item.style.animation='fadeUp 0.3s ease both';
   item.innerHTML=
     '<div class="hist-token">'+token+'</div>'+
     '<div class="hist-info"><div class="hist-name">'+name+'</div><div class="hist-file">'+time+'</div></div>'+
@@ -334,28 +309,31 @@ function rejectJob(cardId,serverId){
   var card=document.getElementById(cardId);
   if(card){
     card.style.transition='opacity 0.3s,transform 0.3s';
-    card.style.opacity='0';card.style.transform='translateX(20px)';
+    card.style.opacity='0';
+    card.style.transform='translateX(20px)';
     setTimeout(function(){if(card.parentNode)card.parentNode.removeChild(card);},300);
   }
-  approvedIds[serverId]=true;delete jobDataStore[serverId];
-  pendingCount=Math.max(0,pendingCount-1);updateStats();
+  approvedIds[serverId]=true;
+  delete jobDataStore[serverId];
+  pendingCount=Math.max(0,pendingCount-1);
+  updateStats();
   fetch(BACKEND_URL+'/api/jobs/'+serverId+'/reject',{method:'PATCH'}).catch(function(){});
+
   var hist=document.getElementById('historyList');
   var noJobs=hist.querySelector('div');
   if(noJobs&&noJobs.style.textAlign==='center')hist.innerHTML='';
-  var item=document.createElement('div');item.className='hist-item';
+  var item=document.createElement('div');
+  item.className='hist-item';
   item.innerHTML=
     '<div class="hist-token">?</div>'+
     '<div class="hist-info"><div class="hist-name">Job rejected</div><div class="hist-file">Just now</div></div>'+
     '<div class="hist-badge rejected">✗ Rejected</div>';
-  hist.prepend(item);showToast('❌ Job rejected');
+  hist.prepend(item);
+  showToast('❌ Job rejected');
 }
 
-document.addEventListener('DOMContentLoaded',function(){
-  loadAnalytics('7');
-  loadJobs();
-  setInterval(loadJobs,15000);
-});
+loadJobs();
+setInterval(loadJobs,15000);
 </script>
 </body>
 </html>
