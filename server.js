@@ -50,6 +50,12 @@ async function callOpenRouter(model, messages) {
     for (let attempt = 1; attempt <= 3; attempt++) {
 
         try {
+            console.log("========== OpenRouter Debug ==========");
+            console.log("Model:", model);
+            console.log("Key exists:", !!process.env.OPENROUTER_API_KEY);
+            console.log("Key prefix:", process.env.OPENROUTER_API_KEY?.substring(0, 8));
+            console.log("Authorization:", `Bearer ${process.env.OPENROUTER_API_KEY?.substring(0, 15)}...`);
+            console.log("======================================");
 
             const res = await fetch(
                 "https://openrouter.ai/api/v1/chat/completions",
