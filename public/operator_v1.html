@@ -160,7 +160,10 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 2
 <div class="toast" id="toast"></div>
 
 <script>
-var BACKEND_URL='https://smart-print-production.up.railway.app';
+const BACKEND_URL =
+    window.location.hostname === "localhost"
+        ? "http://localhost:3000"
+        : "https://smart-print-production.up.railway.app";
 var jobDataStore={};
 var approvedIds={};
 var pendingCount=0;
@@ -188,10 +191,23 @@ async function loadAnalytics(range){
   var panel=document.getElementById('analyticsPanel');
   panel.innerHTML='<p class="analytics-loading">⏳ Loading analytics…</p>';
   try{
-    var res=await fetch(BACKEND_URL+'/api/analytics?range='+currentRange);
-    var data=await res.json();
-    if(!data.success)throw new Error(data.error);
+    var res = await fetch(
+    BACKEND_URL + "/api/analytics?range=" + currentRange
+      );
+
+    var data = await res.json();
+
+    console.log("Analytics Response:", data);
+{
+          throw new Error(data.error || "Analytics failed");
+      }
+    if (!data.success) 
     var s=data.stats;
+    if(!s){
+
+      throw new Error("Statistics not received.");
+
+}
     panel.innerHTML=
       '<h3>📊 Analytics — '+s.period+'</h3>'+
       '<p class="ai-summary-box">'+data.aiSummary+'</p>'+
@@ -204,9 +220,24 @@ async function loadAnalytics(range){
       '<p class="analytics-meta">Peak Hour: <strong>'+s.peakHour+'</strong> &nbsp;·&nbsp; Avg Copies: <strong>'+s.avgCopies+'</strong> &nbsp;·&nbsp; '+s.colorVsBwRatio+'</p>'+
       '<div class="range-btns">'+rBtn('1')+rBtn('7')+rBtn('30')+'</div>';
   }catch(e){
-    panel.innerHTML='<p style="font-size:12px;color:var(--red);padding:12px 0;">Failed to load analytics: '+e.message+'</p>';
-  }
+
+    console.error(e);
+
+    panel.innerHTML =
+    `
+    <div class="ai-summary-box">
+
+        ⚠ Analytics service is temporarily unavailable.
+
+        <br><br>
+
+        ${e.message}
+
+    </div>
+    `;
+
 }
+  }
 
 function aBox(num,label){
   return '<div class="a-stat"><div class="a-stat-num">'+(num||0)+'</div><div class="a-stat-lbl">'+label+'</div></div>';
@@ -351,10 +382,20 @@ function rejectJob(cardId,serverId){
   hist.prepend(item);showToast('❌ Job rejected');
 }
 
-document.addEventListener('DOMContentLoaded',function(){
-  loadAnalytics('7');
-  loadJobs();
-  setInterval(loadJobs,15000);
+document.addEventListener("DOMContentLoaded", function () {
+
+    loadAnalytics("7");
+
+    loadJobs();
+
+    setInterval(function () {
+
+        loadJobs();
+
+        loadAnalytics(currentRange);
+
+    }, 15000);
+
 });
 </script>
 </body>
