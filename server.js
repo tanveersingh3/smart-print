@@ -67,7 +67,7 @@ async function callOpenRouter(model, messages) {
                     headers: {
                       "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
                       "Content-Type": "application/json",
-                      "HTTP-Referer": process.env.RAILWAY_PUBLIC_DOMAIN
+                      "Referer": process.env.RAILWAY_PUBLIC_DOMAIN
                           ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
                           : "http://localhost:3000",
                       "X-Title": "SmartPrint"
