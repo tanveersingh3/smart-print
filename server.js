@@ -6,11 +6,11 @@ const path = require('path');
 const fs = require('fs');
 const { PDFDocument } = require('pdf-lib');
 require('dotenv').config();
+console.log("OpenRouter Key Length:", process.env.OPENROUTER_API_KEY?.length);
+
 console.log(
-    "OpenRouter:",
-    process.env.OPENROUTER_API_KEY
-        ? "Loaded ✅"
-        : "Missing ❌"
+    "Starts With:",
+    process.env.OPENROUTER_API_KEY?.substring(0,8)
 );
 
 // ============================================================
@@ -56,11 +56,13 @@ async function callOpenRouter(model, messages) {
                 {
                     method: "POST",
                     headers: {
-                        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                        "Content-Type": "application/json",
-                        "HTTP-Referer": "https://smart-print.app",
-                        "X-Title": "SmartPrint"
-                    },
+                      "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                      "Content-Type": "application/json",
+                      "HTTP-Referer": process.env.RAILWAY_PUBLIC_DOMAIN
+                          ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+                          : "http://localhost:3000",
+                      "X-Title": "SmartPrint"
+                  },
                     body: JSON.stringify({
                         model,
                         messages
