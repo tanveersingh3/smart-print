@@ -1,3 +1,5 @@
+console.log("===== SMART PRINT BUILD v2 =====");
+console.log("OpenRouter Key Length:", process.env.OPENROUTER_API_KEY?.length);
 const express = require('express');
 const cors = require('cors');
 const admin = require('firebase-admin');
