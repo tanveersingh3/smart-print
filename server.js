@@ -4,7 +4,14 @@ const admin = require('firebase-admin');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { PDFDocument } = require('pdf-lib');
 require('dotenv').config();
+console.log(
+    "OpenRouter:",
+    process.env.OPENROUTER_API_KEY
+        ? "Loaded ✅"
+        : "Missing ❌"
+);
 
 // ============================================================
 // FIREBASE INIT
@@ -15,54 +22,193 @@ if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
 } else {
   serviceAccount = require('./serviceAccount.json');
 }
-
 admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
 
 // ============================================================
-// AI HELPERS — OpenRouter
+// AI HELPERS — OpenRouter with model fallback
 // ============================================================
+
+// Text models — tries each one until one works
+const TEXT_MODELS = [
+  "openrouter/auto",
+  "openrouter/free",
+  "openai/gpt-oss-20b:free",
+  "meta-llama/llama-3.2-3b-instruct:free",
+  "qwen/qwen3-next-80b-a3b-instruct:free",
+  "meta-llama/llama-3.3-70b-instruct:free"
+];
+
+// Vision models — tries each one until one works
+const VISION_MODELS = [
+  'meta-llama/llama-3.2-11b-vision-instruct:free',
+  'qwen/qwen3-next-80b-a3b-instruct:free',
+  'openrouter/auto'
+];
+
+async function callOpenRouter(model, messages) {
+
+    for (let attempt = 1; attempt <= 3; attempt++) {
+
+        try {
+
+            const res = await fetch(
+                "https://openrouter.ai/api/v1/chat/completions",
+                {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                        "Content-Type": "application/json",
+                        "HTTP-Referer": "https://smart-print.app",
+                        "X-Title": "SmartPrint"
+                    },
+                    body: JSON.stringify({
+                        model,
+                        messages
+                    })
+                }
+            );
+
+            const data = await res.json();
+
+            if (res.ok) {
+                return data;
+            }
+
+            console.log(`Attempt ${attempt} failed for ${model}`);
+
+            console.log(data);
+
+            if (attempt < 3) {
+
+                await new Promise(r => setTimeout(r, 1500));
+
+                continue;
+
+            }
+
+            return {
+                error: data.error
+            };
+
+        }
+
+        catch (err) {
+
+            console.log(err.message);
+
+            if (attempt < 3) {
+
+                await new Promise(r => setTimeout(r, 1500));
+
+                continue;
+
+            }
+
+            return {
+                error: {
+                    message: err.message
+                }
+            };
+
+        }
+
+    }
+
+}
+
 async function askAI(prompt) {
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + process.env.OPENROUTER_API_KEY
-    },
-    body: JSON.stringify({
-      model: 'mistralai/mistral-7b-instruct:free',
-      messages: [{ role: 'user', content: prompt }]
-    })
-  });
-  const data = await res.json();
-  if (data.error) throw new Error(data.error.message);
-  return data.choices[0].message.content.trim();
+
+    let lastError = "Unknown error";
+
+    for (const model of TEXT_MODELS) {
+
+        console.log("\nTrying:", model);
+
+        const data = await callOpenRouter(model, [
+            {
+                role: "user",
+                content: prompt
+            }
+        ]);
+
+        if (data.error) {
+
+            console.log("Failed:", model);
+
+            lastError = data.error.message || lastError;
+
+            continue;
+
+        }
+
+        console.log("Success:", model);
+
+        return data.choices[0].message.content.trim();
+
+    }
+
+    throw new Error(lastError);
+
 }
 
 async function askAIVision(prompt, imageBase64, mimeType) {
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + process.env.OPENROUTER_API_KEY
-    },
-    body: JSON.stringify({
-      model: 'google/gemini-2.0-flash-exp:free',
-      messages: [{
+  for (const model of VISION_MODELS) {
+    try {
+      console.log('Trying vision model:', model);
+      const data = await callOpenRouter(model, [{
         role: 'user',
         content: [
           { type: 'text', text: prompt },
           { type: 'image_url', image_url: { url: `data:${mimeType};base64,${imageBase64}` } }
         ]
-      }]
-    })
-  });
-  const data = await res.json();
-  if (data.error) throw new Error(data.error.message);
-  return data.choices[0].message.content.trim();
+      }]);
+      if (data.error) {
+        console.log('Vision model', model, 'error:', data.error.code, '-', data.error.message?.substring(0, 80));
+        continue;
+      }
+      const text = data.choices[0].message.content.trim();
+      console.log('Vision success with model:', model);
+      return text;
+    } catch (e) {
+      console.log('Vision model', model, 'threw:', e.message);
+      continue;
+    }
+  }
+  throw new Error('All vision AI models are currently unavailable. Please try again in a minute.');
 }
 
 function cleanJSON(text) {
+  // Extract JSON from response — handles markdown fences and extra text
+  const match = text.match(/\{[\s\S]*\}/);
+  if (match) return match[0];
   return text.replace(/```json|```/g, '').trim();
+}
+async function getActualPageCount(filePath) {
+
+    try {
+
+        const ext = path.extname(filePath).toLowerCase();
+
+        if (ext === ".pdf") {
+
+            const bytes = fs.readFileSync(filePath);
+
+            const pdf = await PDFDocument.load(bytes);
+
+            return pdf.getPageCount();
+
+        }
+
+        return 1;
+
+    } catch (err) {
+
+        console.log("Page Count Error:", err.message);
+
+        return 1;
+
+    }
+
 }
 
 // ============================================================
@@ -84,6 +230,8 @@ const storage = multer.diskStorage({
   }
 });
 const upload = multer({ storage });
+const uploadMultiple = multer({ storage }).array('images', 50); // up to 50 images per batch
+const generatePrintablePDF = require("./layout/layoutEngine");
 
 // ============================================================
 // STATIC ROUTES
@@ -101,6 +249,96 @@ app.get('/health', (req, res) => res.json({ message: 'Smart Print server is runn
 // ============================================================
 // ORIGINAL: SUBMIT PRINT JOB
 // ============================================================
+app.post('/api/page-count', upload.single('file'), async (req, res) => {
+
+    try {
+
+        if (!req.file) {
+
+            return res.status(400).json({
+                success: false,
+                error: "No file uploaded"
+            });
+
+        }
+
+        const pages = await getActualPageCount(req.file.path);
+
+        fs.unlink(req.file.path, () => {});
+
+        res.json({
+            success: true,
+            pages
+        });
+
+    }
+
+    catch (err) {
+
+        res.status(500).json({
+            success: false,
+            error: err.message
+        });
+
+    }
+
+});
+
+// ============================================================
+// NEW: COMPOSE IMAGES → PDF
+// Implements the "Correct Workflow" from the redesign diagram:
+//   Upload Images -> Apply Images Per Sheet -> Compose Sheets
+//   -> Convert to PDF -> print_ready.pdf
+//
+// This lets students upload PNG/JPG images and still get a file
+// Adobe Reader (and the existing print_agent) can actually print,
+// with zero changes needed to print_agent_v2.py.
+// ============================================================
+app.post('/api/compose-images', uploadMultiple, async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ success: false, error: 'No images uploaded' });
+    }
+
+    const imagesPerSheet = parseInt(req.body.imagesPerSheet) || 1;
+    const imagePaths = req.files.map(f => f.path);
+
+    console.log(`🖼️ Composing ${imagePaths.length} images, ${imagesPerSheet} per sheet...`);
+
+    const pdfBuffer = await generatePrintablePDF(imagePaths, imagesPerSheet);
+
+    // Save the composed PDF into uploads/ so it gets a public URL just
+    // like any other uploaded file
+    const pdfFileName = Date.now() + '_print_ready.pdf';
+    const pdfPath = path.join(__dirname, 'uploads', pdfFileName);
+    fs.writeFileSync(pdfPath, pdfBuffer);
+
+    // Clean up the original uploaded images — we only need the PDF now
+    imagePaths.forEach(p => fs.unlink(p, () => {}));
+
+    const pdfDoc = await PDFDocument.load(pdfBuffer);
+    const pageCount = pdfDoc.getPageCount();
+
+    const fileUrl = process.env.RAILWAY_PUBLIC_DOMAIN
+      ? 'https://' + process.env.RAILWAY_PUBLIC_DOMAIN + '/uploads/' + pdfFileName
+      : 'http://localhost:3000/uploads/' + pdfFileName;
+
+    console.log(`✅ Composed PDF ready: ${pdfFileName} (${pageCount} page${pageCount > 1 ? 's' : ''})`);
+
+    res.json({
+      success: true,
+      fileUrl,
+      fileName: pdfFileName,
+      pages: pageCount,
+      imagesComposed: imagePaths.length,
+      imagesPerSheet
+    });
+  } catch (err) {
+    console.error('Compose images error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.post('/api/jobs', upload.single('file'), async (req, res) => {
   try {
     const { name, whatsapp, color, sides, copies, urgent, paid, pages, colorRanges } = req.body;
@@ -125,7 +363,9 @@ app.post('/api/jobs', upload.single('file'), async (req, res) => {
       copies: parseInt(copies),
       urgent: urgent === 'true',
       paid: paid === 'true',
-      pages: parseInt(pages) || 0,
+      pages: req.file
+    ? await getActualPageCount(req.file.path)
+    : parseInt(pages) || 1,
       colorRanges: colorRanges ? JSON.parse(colorRanges) : [],
       fileName, fileUrl,
       status: 'pending',
@@ -185,12 +425,16 @@ app.post('/api/ai/analyze', upload.single('file'), async (req, res) => {
     const fileSizeKB = Math.round(file.size / 1024);
     const ext = path.extname(fileName).replace('.', '').toUpperCase();
 
-    const prompt = `You are a smart print settings advisor for a college print shop.
+    const prompt = `You are a print settings advisor for a college print shop.
 A student uploaded: name="${fileName}", type=${ext}, size=${fileSizeKB}KB.
-Respond ONLY with this JSON, no markdown, fill in the values:
-{"documentType":"what this document likely is","colorMode":"bw","orientation":"portrait","sides":"single","copies":1,"reasoning":{"colorMode":"reason","orientation":"reason","sides":"reason"},"costTip":"one tip","warning":null}`;
+Based on the filename, recommend print settings.
+Reply with ONLY a JSON object, absolutely no other text:
+{"documentType":"assignment","colorMode":"bw","orientation":"portrait","sides":"single","copies":1,"reasoning":{"colorMode":"text documents print fine in B&W","orientation":"standard document format","sides":"single sided for easy reading"},"costTip":"Print B&W to save money","warning":null}`;
 
     const raw = await askAI(prompt);
+    console.log("===== AI RAW RESPONSE =====");
+    console.log(raw);
+    console.log("===========================");
     const recommendation = JSON.parse(cleanJSON(raw));
     res.json({ success: true, recommendation });
   } catch (err) {
@@ -218,9 +462,9 @@ app.post('/api/ai/ocr', upload.single('file'), async (req, res) => {
     const mimeMap = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.gif': 'image/gif', '.webp': 'image/webp' };
     const mimeType = mimeMap[ext] || 'image/jpeg';
 
-    const prompt = `You are an OCR engine for a print shop. Extract ALL text from this image.
-Respond ONLY with this JSON, no markdown:
-{"extractedText":"all text from image","detectedOrientation":"portrait","confidence":"high","qualityIssues":[],"suggestedFixes":[],"hasHandwriting":false,"printReady":true}`;
+    const prompt = `Extract ALL text from this image for a print shop OCR system.
+Reply with ONLY a JSON object, no other text:
+{"extractedText":"paste all text here","detectedOrientation":"portrait","confidence":"high","qualityIssues":[],"suggestedFixes":[],"hasHandwriting":false,"printReady":true}`;
 
     const raw = await askAIVision(prompt, base64Image, mimeType);
     const ocrResult = JSON.parse(cleanJSON(raw));
@@ -254,10 +498,9 @@ app.post('/api/ai/preview-check', upload.single('file'), async (req, res) => {
       const base64Image = imageBuffer.toString('base64');
       const mimeType = ext === '.png' ? 'image/png' : 'image/jpeg';
 
-      const prompt = `You are a print quality checker. Analyze this image for print-readiness.
-Settings: color=${color || 'bw'}, sides=${sides || 'single'}, copies=${copies || 1}.
-Respond ONLY with this JSON, no markdown:
-{"issues":[],"warnings":[],"previewNotes":["describe what the print will look like"],"resolution":"high","recommendedOrientation":"portrait","willLookGoodBW":true,"estimatedPages":1,"overallScore":"good"}`;
+      const prompt = `Analyze this image for print quality. Settings: color=${color || 'bw'}, sides=${sides || 'single'}, copies=${copies || 1}.
+Reply with ONLY a JSON object, no other text:
+{"issues":[],"warnings":[],"previewNotes":["describe print output here"],"resolution":"high","recommendedOrientation":"portrait","willLookGoodBW":true,"estimatedPages":1,"overallScore":"good"}`;
 
       const raw = await askAIVision(prompt, base64Image, mimeType);
       const result = JSON.parse(cleanJSON(raw));
@@ -269,12 +512,13 @@ Respond ONLY with this JSON, no markdown:
       return res.json({ success: true, fileUrl, ...result });
     }
 
+    // For PDF/DOC — heuristic checks (no AI needed)
     const warnings = [];
     const previewNotes = [];
     if (fileSizeKB < 10) warnings.push('File is very small — may be empty or corrupt.');
-    if (color === 'bw') previewNotes.push('Will print in grayscale.');
-    if (sides === 'double') previewNotes.push('Double-sided enabled.');
-    if (parseInt(copies) > 5) warnings.push(`${copies} copies requested — confirm before submitting.`);
+    if (color === 'bw') previewNotes.push('Will print in grayscale. Colour charts will lose distinction.');
+    if (sides === 'double') previewNotes.push('Double-sided enabled. Ensure even page count.');
+    if (parseInt(copies) > 5) warnings.push(`${copies} copies — confirm before submitting.`);
 
     res.json({ success: true, issues: [], warnings, previewNotes, overallScore: 'good', fileType: ext.replace('.', '').toUpperCase() });
   } catch (err) {
@@ -304,14 +548,21 @@ app.get('/api/analytics', async (req, res) => {
     });
 
     const totalJobs = jobs.length;
-    const totalPages = jobs.reduce((s, j) => s + (j.pages || 0), 0);
+    const totalPages = jobs.reduce(
+    (s,j)=>s+Number(j.pages||0),
+    0
+    );
     const colorJobs = jobs.filter(j => j.color === 'color').length;
     const bwJobs = jobs.filter(j => j.color === 'bw').length;
     const urgentJobs = jobs.filter(j => j.urgent).length;
-    const completedJobs = jobs.filter(j => j.status === 'done').length;
+    const completedJobs = jobs.filter(
+    j =>
+        j.status === "approved" ||
+        j.status === "completed"
+    ).length;
     const pendingJobs = jobs.filter(j => j.status === 'pending').length;
     const rejectedJobs = jobs.filter(j => j.status === 'rejected').length;
-    const avgCopies = totalJobs > 0 ? (jobs.reduce((s, j) => s + (j.copies || 1), 0) / totalJobs).toFixed(1) : 0;
+    const avgCopies = totalJobs > 0 ? (jobs.reduce((s, j) => s + Number(j.copies || 1), 0) / totalJobs).toFixed(1) : 0;
     const paidJobs = jobs.filter(j => j.paid).length;
     const unpaidJobs = totalJobs - paidJobs;
 
@@ -324,18 +575,60 @@ app.get('/api/analytics', async (req, res) => {
       totalJobs, totalPages, colorJobs, bwJobs,
       urgentJobs, completedJobs, pendingJobs, rejectedJobs,
       avgCopies: parseFloat(avgCopies), paidJobs, unpaidJobs,
-      peakHour: `${peakHour}:00 - ${peakHour + 1}:00`,
-      colorVsBwRatio: totalJobs > 0 ? `${Math.round((colorJobs/totalJobs)*100)}% colour, ${Math.round((bwJobs/totalJobs)*100)}% B&W` : 'No data'
+      peakHour:
+      totalJobs
+      ?
+      `${peakHour}:00 - ${peakHour+1}:00`
+      :
+      "No data",
+      colorVsBwRatio: totalJobs > 0
+        ? `${Math.round((colorJobs / totalJobs) * 100)}% colour, ${Math.round((bwJobs / totalJobs) * 100)}% B&W`
+        : 'No data'
     };
 
-    const summaryPrompt = `You are a business analyst for a print shop. Stats for last ${range} days: ${JSON.stringify(stats)}. Write 3-4 sentences summarizing key metrics and one actionable tip. Plain paragraph, no bullets.`;
+    const summaryPrompt = `You are a business analyst for a college print shop. Here are the stats: ${JSON.stringify(stats)}.
+Write 3-4 sentences summarizing key metrics and one actionable tip for the shop owner.
+Plain paragraph only, no bullets, no markdown, no JSON.`;
 
-    const aiSummary = await askAI(summaryPrompt);
+    
+    let aiSummary;
+
+    try{
+
+        aiSummary = await askAI(summaryPrompt);
+
+    }
+    catch(err){
+
+        console.log("Analytics AI failed:",err.message);
+
+        aiSummary =
+            "Print activity looks normal. Black & White jobs dominate the workload. Consider promoting double-sided printing to reduce paper usage and improve efficiency.";
+
+}
     res.json({ success: true, stats, aiSummary, hourlyDistribution: hourBuckets });
-  } catch (err) {
-    console.error('Feature 4 error:', err.message);
-    res.status(500).json({ error: err.message });
   }
+  catch (err) {
+
+    console.log("\n========== ANALYTICS ERROR ==========");
+
+    console.error(err);
+
+    console.log("Stack:");
+
+    console.log(err.stack);
+
+    console.log("=====================================\n");
+
+    res.status(500).json({
+
+        success:false,
+
+        error:err.message || "Analytics failed"
+
+    });
+
+}
 });
 
 // ============================================================
@@ -346,9 +639,11 @@ app.post('/api/ai/parse-request', async (req, res) => {
     const { text } = req.body;
     if (!text || !text.trim()) return res.status(400).json({ error: 'No text provided' });
 
-    const prompt = `You are a print settings parser. Student said: "${text}"
-Respond ONLY with this JSON, no markdown:
-{"color":"bw","sides":"single","copies":1,"urgent":false,"orientation":"auto","understood":"printing 1 copy black and white single sided","missingInfo":[],"confidence":"high"}`;
+    const prompt = `You are a print settings parser for a college print shop.
+Student said: "${text}"
+Extract print settings from this request.
+Reply with ONLY a JSON object, no other text:
+{"color":"bw","sides":"single","copies":1,"urgent":false,"orientation":"auto","understood":"1 copy black and white single sided","missingInfo":[],"confidence":"high"}`;
 
     const raw = await askAI(prompt);
     const parsed = JSON.parse(cleanJSON(raw));

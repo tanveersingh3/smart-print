@@ -4,7 +4,9 @@ const admin = require('firebase-admin');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { PDFDocument } = require('pdf-lib');
 require('dotenv').config();
+console.log("OPENROUTER_API_KEY =", process.env.OPENROUTER_API_KEY);
 
 let serviceAccount;
 if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
