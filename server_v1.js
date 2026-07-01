@@ -6,11 +6,11 @@ const path = require('path');
 const fs = require('fs');
 const { PDFDocument } = require('pdf-lib');
 require('dotenv').config();
+console.log("OpenRouter Key Length:", process.env.OPENROUTER_API_KEY?.length);
+
 console.log(
-    "OpenRouter:",
-    process.env.OPENROUTER_API_KEY
-        ? "Loaded ✅"
-        : "Missing ❌"
+    "Starts With:",
+    process.env.OPENROUTER_API_KEY?.substring(0,8)
 );
 
 // ============================================================
@@ -50,17 +50,25 @@ async function callOpenRouter(model, messages) {
     for (let attempt = 1; attempt <= 3; attempt++) {
 
         try {
+            console.log("========== OpenRouter Debug ==========");
+            console.log("Model:", model);
+            console.log("Key exists:", !!process.env.OPENROUTER_API_KEY);
+            console.log("Key prefix:", process.env.OPENROUTER_API_KEY?.substring(0, 8));
+            console.log("Authorization:", `Bearer ${process.env.OPENROUTER_API_KEY?.substring(0, 15)}...`);
+            console.log("======================================");
 
             const res = await fetch(
                 "https://openrouter.ai/api/v1/chat/completions",
                 {
                     method: "POST",
                     headers: {
-                        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                        "Content-Type": "application/json",
-                        "HTTP-Referer": "https://smart-print.app",
-                        "X-Title": "SmartPrint"
-                    },
+                      "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                      "Content-Type": "application/json",
+                      "Referer": process.env.RAILWAY_PUBLIC_DOMAIN
+                          ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+                          : "http://localhost:3000",
+                      "X-Title": "SmartPrint"
+                  },
                     body: JSON.stringify({
                         model,
                         messages
@@ -341,18 +349,12 @@ app.post('/api/compose-images', uploadMultiple, async (req, res) => {
 
 app.post('/api/jobs', upload.single('file'), async (req, res) => {
   try {
-    const { name, whatsapp, color, sides, copies, urgent, paid, pages, colorRanges,
-            composedFileUrl, composedFileName } = req.body;
+    const { name, whatsapp, color, sides, copies, urgent, paid, pages, colorRanges } = req.body;
     const db = admin.firestore();
 
     let fileUrl = '';
     let fileName = 'unknown';
-
-    // Image jobs: composed PDF URL comes pre-built from /api/compose-images
-    if (composedFileUrl && composedFileName) {
-      fileUrl = composedFileUrl;
-      fileName = composedFileName;
-    } else if (req.file) {
+    if (req.file) {
       fileName = req.file.originalname;
       fileUrl = process.env.RAILWAY_PUBLIC_DOMAIN
         ? 'https://' + process.env.RAILWAY_PUBLIC_DOMAIN + '/uploads/' + req.file.filename

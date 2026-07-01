@@ -204,21 +204,6 @@ main{padding:22px 16px 0;max-width:480px;margin:0 auto;}
 .sp-toast.error{background:var(--error);}
 .sp-toast.warn{background:var(--warning);}
 
-/* ── Multi-image thumbnail grid ── */
-.img-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
-.img-thumb{aspect-ratio:1;border-radius:8px;background:#f1f5f9;border:1px solid var(--border);overflow:hidden;position:relative;}
-.img-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
-.img-thumb-more{display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--muted);background:#f1f5f9;}
-.img-count-banner{display:flex;align-items:center;justify-content:space-between;margin-top:10px;font-size:12px;color:var(--muted);}
-.img-count-banner strong{color:var(--text);}
-.img-add-more{font-size:12px;font-weight:600;color:var(--blue);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;}
-
-/* ── Compose progress banner ── */
-.compose-banner{display:flex;align-items:center;gap:10px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:var(--radius-xs);padding:12px 14px;margin-top:10px;font-size:13px;color:var(--blue);font-weight:600;}
-.compose-banner .spinner{width:14px;height:14px;border:2px solid #bfdbfe;border-top-color:var(--blue);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;}
-.compose-done{background:#f0fdf4;border-color:#bbf7d0;color:#15803d;}
-.compose-done .spinner{display:none;}
-
 /* ── Animations ── */
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
 @keyframes slideIn{from{opacity:0;transform:translateX(-8px);}to{opacity:1;transform:translateX(0);}}
@@ -281,11 +266,9 @@ main{padding:22px 16px 0;max-width:480px;margin:0 auto;}
     <div class="upload-zone" id="uploadZone">
       <div class="upload-icon">📄</div>
       <div class="upload-title">Tap to upload file</div>
-      <div class="upload-sub">PDF, Word — or select multiple JPG/PNG images</div>
-      <input type="file" id="fileInput" accept=".pdf,.docx,.doc,.jpg,.jpeg,.png" multiple onchange="handleFile(this)">
+      <div class="upload-sub">PDF, Word, JPG, PNG · Max 20MB</div>
+      <input type="file" id="fileInput" accept=".pdf,.docx,.doc,.jpg,.jpeg,.png" onchange="handleFile(this)">
     </div>
-
-    <!-- Single file preview (PDF/doc) -->
     <div class="file-preview" id="filePreview">
       <div class="file-icon" id="fileIcon">📄</div>
       <div class="file-info">
@@ -293,19 +276,6 @@ main{padding:22px 16px 0;max-width:480px;margin:0 auto;}
         <div class="file-meta" id="fileMeta">PDF · 12 pages</div>
       </div>
       <button class="file-remove" onclick="removeFile()">×</button>
-    </div>
-
-    <!-- Multi-image preview (images only) -->
-    <div id="imgPreviewArea" style="display:none;">
-      <div class="img-grid" id="imgGrid"></div>
-      <div class="img-count-banner">
-        <span><strong id="imgCountLabel">0 images</strong> selected</span>
-        <button class="img-add-more" onclick="document.getElementById('fileInput').click()">+ Add more</button>
-      </div>
-      <div id="composeBanner" class="compose-banner" style="display:none;">
-        <span class="spinner"></span>
-        <span id="composeBannerText">Composing images into PDF…</span>
-      </div>
     </div>
 
     <!-- ── FEATURE 1: AI Print Assistant ── -->
@@ -482,138 +452,85 @@ fetch(BACKEND_URL+'/api/jobs').then(function(r){return r.json();}).then(function
 });
 
 // ── File handling ──
-// Tracks selected image files across multiple selections
-var selectedImageFiles = [];
-// Stores the composed PDF info after /api/compose-images returns
-var composedPDF = null; // { fileUrl, fileName, pages }
-
 function handleFile(input){
-  if(!input.files||!input.files[0]) return;
+  if(!input.files||!input.files[0])return;
+  var file = input.files[0];
+  var ext = file.name.split('.').pop().toLowerCase();
+  var isImg = (ext==='jpg'||ext==='jpeg'||ext==='png');
+  cfg.type = isImg ? 'img' : 'doc';
+  var icons = {pdf:'📄',doc:'📝',docx:'📝',jpg:'🖼️',jpeg:'🖼️',png:'🖼️'};
+  cfg.pages = isImg ? 1 : 0;
+  if (!isImg) {
 
-  // Determine if any selected file is an image
-  var allFiles = Array.from(input.files);
-  var firstExt = allFiles[0].name.split('.').pop().toLowerCase();
-  var isImg = (firstExt==='jpg'||firstExt==='jpeg'||firstExt==='png');
+    const fd = new FormData();
 
-  // If mixed (e.g. user accidentally picked a PDF alongside images), filter to images only
-  if(isImg) {
-    var imgFiles = allFiles.filter(function(f){
-      var e = f.name.split('.').pop().toLowerCase();
-      return e==='jpg'||e==='jpeg'||e==='png';
-    });
-    handleImageFiles(imgFiles);
-    return;
-  }
+    fd.append("file", file);
 
-  // Single document (PDF/DOC)
-  cfg.type = 'doc';
-  cfg.pages = 0;
-  composedPDF = null;
-  selectedImageFiles = [];
+    fetch(BACKEND_URL + "/api/page-count", {
 
-  var file = allFiles[0];
-  var ext = firstExt;
-  var icons = {pdf:'📄',doc:'📝',docx:'📝'};
+        method: "POST",
+
+        body: fd
+
+    })
+    .then(r => r.json())
+
+    .then(data => {
+
+        if (!data.success) return;
+
+        cfg.pages = data.pages;
+
+        document.getElementById("fileMeta").textContent =
+            ext.toUpperCase() +
+            " · " +
+            data.pages +
+            " pages · " +
+            (file.size / 1048576).toFixed(1) +
+            " MB";
+
+        updatePrice();
+
+        checkSubmit();
+
+    })
+
+    .catch(console.error);
+
+}
+  if(isImg) cfg.imgCount = 1;
 
   document.getElementById('fileIcon').textContent = icons[ext]||'📄';
   document.getElementById('fileName').textContent = file.name;
-  document.getElementById('fileMeta').textContent = ext.toUpperCase()+' · Detecting pages… · '+(file.size/1048576).toFixed(1)+' MB';
+  if (isImg) {
 
+    document.getElementById("fileMeta").textContent =
+        ext.toUpperCase() +
+        " · 1 image · " +
+        (file.size / 1048576).toFixed(1) +
+        " MB";
+
+}
+else {
+
+    document.getElementById("fileMeta").textContent =
+        ext.toUpperCase() +
+        " · Detecting pages... · " +
+        (file.size / 1048576).toFixed(1) +
+        " MB";
+
+}
   document.getElementById('uploadZone').style.display = 'none';
   document.getElementById('filePreview').classList.add('show');
-  document.getElementById('imgPreviewArea').style.display = 'none';
 
-  document.getElementById('colorSection').style.display = 'block';
-  document.getElementById('imgConfig').style.display = 'none';
-  document.getElementById('imgConfig').classList.remove('show');
-  document.getElementById('pageRangeField').style.display = 'block';
-  document.getElementById('btnOCR').style.display = 'none';
+  document.getElementById('colorSection').style.display = isImg ? 'none' : 'block';
+  document.getElementById('imgConfig').style.display = isImg ? 'block' : 'none';
+  document.getElementById('imgConfig').classList.toggle('show', isImg);
+  document.getElementById('pageRangeField').style.display = isImg ? 'none' : 'block';
 
-  // Get real page count from server
-  var fd = new FormData();
-  fd.append('file', file);
-  fetch(BACKEND_URL+'/api/page-count', {method:'POST', body:fd})
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      if(!data.success) return;
-      cfg.pages = data.pages;
-      document.getElementById('fileMeta').textContent =
-        ext.toUpperCase()+' · '+data.pages+' pages · '+(file.size/1048576).toFixed(1)+' MB';
-      updatePrice(); checkSubmit();
-    })
-    .catch(console.error);
+  // Show OCR button only for images
+  document.getElementById('btnOCR').style.display = isImg ? 'block' : 'none';
 
-  updatePrice(); checkSubmit();
-}
-
-function handleImageFiles(newFiles){
-  // Merge with already-selected images (so "Add more" works)
-  selectedImageFiles = selectedImageFiles.concat(newFiles);
-  composedPDF = null; // reset — needs recomposing
-
-  cfg.type = 'img';
-  cfg.imgCount = selectedImageFiles.length;
-  cfg.pages = Math.ceil(selectedImageFiles.length / cfg.imgPerSheet);
-
-  // Hide single-file preview, show image grid
-  document.getElementById('uploadZone').style.display = 'none';
-  document.getElementById('filePreview').classList.remove('show');
-  document.getElementById('imgPreviewArea').style.display = 'block';
-  document.getElementById('composeBanner').style.display = 'none';
-
-  document.getElementById('colorSection').style.display = 'none';
-  document.getElementById('imgConfig').style.display = 'block';
-  document.getElementById('imgConfig').classList.add('show');
-  document.getElementById('pageRangeField').style.display = 'none';
-  document.getElementById('btnOCR').style.display = selectedImageFiles.length===1 ? 'block' : 'none';
-
-  renderImageGrid();
-  updatePrice(); checkSubmit();
-}
-
-function renderImageGrid(){
-  var grid = document.getElementById('imgGrid');
-  var count = selectedImageFiles.length;
-  var maxShow = 7; // show up to 7 thumbs + 1 overflow cell
-
-  document.getElementById('imgCountLabel').textContent =
-    count+' image'+(count>1?'s':'');
-
-  grid.innerHTML = '';
-  var show = Math.min(count, count > maxShow ? maxShow : count);
-  for(var i=0; i<show; i++){
-    var thumb = document.createElement('div');
-    thumb.className = 'img-thumb';
-    var img = document.createElement('img');
-    img.src = URL.createObjectURL(selectedImageFiles[i]);
-    thumb.appendChild(img);
-    grid.appendChild(thumb);
-  }
-  if(count > maxShow){
-    var more = document.createElement('div');
-    more.className = 'img-thumb img-thumb-more';
-    more.textContent = '+' + (count - maxShow);
-    grid.appendChild(more);
-  }
-}
-
-function removeFile(){
-  cfg.pages = 0; cfg.type = 'doc';
-  composedPDF = null;
-  selectedImageFiles = [];
-
-  document.getElementById('uploadZone').style.display = '';
-  document.getElementById('filePreview').classList.remove('show');
-  document.getElementById('imgPreviewArea').style.display = 'none';
-  document.getElementById('fileInput').value = '';
-  document.getElementById('colorSection').style.display = 'block';
-  document.getElementById('imgConfig').classList.remove('show');
-  document.getElementById('imgConfig').style.display = 'none';
-  document.getElementById('pageRangeField').style.display = 'block';
-  document.getElementById('btnOCR').style.display = 'none';
-  document.getElementById('aiResult').innerHTML = '';
-  document.getElementById('ocrResult').innerHTML = '';
-  document.getElementById('previewResult').innerHTML = '';
   updatePrice(); checkSubmit();
 }
 
@@ -637,15 +554,7 @@ function selectChip(gid, el, val){
   el.classList.add('active');
   if(gid==='colorChips'){ cfg.color=val; document.getElementById('mixedConfig').classList.toggle('show',val==='mixed'); }
   if(gid==='sideChips') cfg.sides = val;
-  if(gid==='ipsChips'){
-    cfg.imgPerSheet=parseInt(val);
-    // Recalculate pages based on new layout
-    if(selectedImageFiles.length > 0){
-      cfg.pages = Math.ceil(selectedImageFiles.length / cfg.imgPerSheet);
-      composedPDF = null; // layout changed — needs recomposing
-    }
-    updateImgNote();
-  }
+  if(gid==='ipsChips'){ cfg.imgPerSheet=parseInt(val); updateImgNote(); }
   if(gid==='imgColorChips') cfg.imgColor = val;
   updatePrice();
 }
@@ -927,8 +836,6 @@ async function parseNLRequest(){
 
 // ────────────────────────────────────────────────
 // Submit Job
-// For image jobs: compose first → then submit PDF URL
-// For doc/PDF jobs: submit file directly as before
 // ────────────────────────────────────────────────
 async function submitJob(){
   var name = document.getElementById('studentName').value.trim();
@@ -938,46 +845,9 @@ async function submitJob(){
   var eta = urgent ? '2–4 min' : (3*2+2)+'–'+(3*3+4)+' min';
 
   var btn = document.getElementById('submitBtn');
-  btn.disabled = true;
+  btn.disabled = true; btn.textContent = 'Submitting...';
 
   try {
-    var fileUrl = '';
-    var fileName = '';
-    var pages = cfg.pages;
-
-    // ── IMAGE JOB: compose first if not already done ──
-    if(cfg.type === 'img' && selectedImageFiles.length > 0){
-
-      if(!composedPDF){
-        // Show compose progress
-        btn.textContent = 'Composing images…';
-        var banner = document.getElementById('composeBanner');
-        banner.style.display = 'flex';
-        banner.className = 'compose-banner';
-        document.getElementById('composeBannerText').textContent =
-          'Composing '+selectedImageFiles.length+' image'+(selectedImageFiles.length>1?'s':'')+' into PDF…';
-
-        var fd = new FormData();
-        selectedImageFiles.forEach(function(f){ fd.append('images', f); });
-        fd.append('imagesPerSheet', cfg.imgPerSheet || 1);
-
-        var composeRes = await fetch(BACKEND_URL+'/api/compose-images', {method:'POST', body:fd});
-        var composeData = await composeRes.json();
-        if(!composeData.success) throw new Error(composeData.error || 'Image composition failed');
-
-        composedPDF = composeData; // cache it so re-submits don't recompose
-        banner.className = 'compose-banner compose-done';
-        document.getElementById('composeBannerText').textContent =
-          '✅ PDF ready — '+composeData.pages+' page'+(composeData.pages>1?'s':'')+' · submitting…';
-      }
-
-      fileUrl = composedPDF.fileUrl;
-      fileName = composedPDF.fileName;
-      pages = composedPDF.pages;
-      btn.textContent = 'Submitting…';
-    }
-
-    // ── DOC/PDF JOB: build standard formData with file attachment ──
     var formData = new FormData();
     formData.append('name', name);
     formData.append('whatsapp', document.getElementById('whatsappNum').value);
@@ -986,21 +856,12 @@ async function submitJob(){
     formData.append('copies', copies);
     formData.append('urgent', urgent);
     formData.append('paid', paid);
-    formData.append('pages', pages);
+    formData.append('pages', cfg.pages);
     formData.append('colorRanges', JSON.stringify(cfg.colorRanges||[]));
     formData.append('fileType', cfg.type);
     formData.append('imgPerSheet', cfg.imgPerSheet||1);
-
-    if(cfg.type === 'img'){
-      // For image jobs: the composed PDF is already on the server.
-      // We pass its URL/name as metadata — no re-upload needed.
-      // server.js /api/jobs will use the fileUrl we pass via a special field.
-      formData.append('composedFileUrl', fileUrl);
-      formData.append('composedFileName', fileName);
-    } else {
-      var fileInput = document.getElementById('fileInput');
-      if(fileInput.files && fileInput.files[0]) formData.append('file', fileInput.files[0]);
-    }
+    var fileInput = document.getElementById('fileInput');
+    if(fileInput.files&&fileInput.files[0]) formData.append('file', fileInput.files[0]);
 
     var res = await fetch(BACKEND_URL+'/api/jobs', {method:'POST', body:formData});
     var data = await res.json();
@@ -1011,7 +872,6 @@ async function submitJob(){
     document.getElementById('tokenCard').classList.add('show');
     document.getElementById('tokenCard').scrollIntoView({behavior:'smooth'});
   } catch(err) {
-    document.getElementById('composeBanner').style.display = 'none';
     alert('Error: '+err.message);
     btn.disabled = false; btn.textContent = 'Submit Print Job →';
   }
@@ -1028,9 +888,6 @@ uz.addEventListener('drop', function(e){
   e.preventDefault(); uz.classList.remove('drag');
   if(e.dataTransfer.files.length) handleFile({files:e.dataTransfer.files});
 });
-
-// Reset composedPDF cache if imagesPerSheet chip changes
-// (already handled in selectChip above)
 </script>
 </body>
 </html>
