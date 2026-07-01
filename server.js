@@ -668,4 +668,23 @@ app.get('*', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+app.get("/cleanup", (req, res) => {
+
+    const uploadDir = path.join(__dirname, "uploads");
+
+    fs.readdir(uploadDir, (err, files) => {
+
+        if (err) {
+            return res.status(500).send(err.message);
+        }
+
+        files.forEach(file => {
+            fs.unlinkSync(path.join(uploadDir, file));
+        });
+
+        res.send("Uploads cleaned successfully!");
+
+    });
+
+});
 app.listen(PORT, () => console.log(`Smart Print server running on port ${PORT}`));
