@@ -73,12 +73,15 @@ main{padding:22px 16px 0;max-width:480px;margin:0 auto;}
 .nlp-row button:disabled{opacity:0.5;cursor:not-allowed;}
 
 /* ── Upload zone ── */
-.upload-zone{border:2px dashed var(--border);border-radius:var(--radius-sm);padding:40px 20px;text-align:center;cursor:pointer;transition:all 0.2s;position:relative;background:var(--bg);}
-.upload-zone.drag,.upload-zone:active{border-color:var(--green);background:#f0fdf4;transform:scale(0.99);}
-.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius-sm);padding:40px 20px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--bg);}
+.upload-zone.drag{border-color:var(--green);background:#f0fdf4;}
 .upload-icon{font-size:36px;margin-bottom:10px;}
 .upload-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;}
-.upload-sub{font-size:12px;color:var(--muted);}
+.upload-sub{font-size:12px;color:var(--muted);margin-bottom:14px;}
+.upload-btn{display:inline-block;padding:10px 22px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-xs);font-family:'Sora',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:background 0.15s;}
+.upload-btn:hover{background:var(--green-h);}
+/* hidden real input — triggered programmatically */
+#fileInput{display:none;}
 
 /* ── File preview ── */
 .file-preview{display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--radius-sm);padding:14px;margin-top:12px;align-items:center;gap:12px;animation:fadeUp 0.3s ease both;}
@@ -295,11 +298,14 @@ main{padding:22px 16px 0;max-width:480px;margin:0 auto;}
   <!-- Document -->
   <div class="section-label">📄 Your document</div>
   <div class="card">
-    <div class="upload-zone" id="uploadZone">
+    <!-- Hidden file input — triggered by button click -->
+    <input type="file" id="fileInput" accept=".pdf,.docx,.doc,.jpg,.jpeg,.png" multiple onchange="handleFile(this)">
+
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
       <div class="upload-icon">📄</div>
       <div class="upload-title">Tap to upload file</div>
       <div class="upload-sub">PDF, Word — or select multiple JPG/PNG images</div>
-      <input type="file" id="fileInput" accept=".pdf,.docx,.doc,.jpg,.jpeg,.png" multiple onchange="handleFile(this)">
+      <button class="upload-btn" type="button" onclick="event.stopPropagation(); document.getElementById('fileInput').click()">Choose File</button>
     </div>
 
     <!-- Single file preview (PDF/doc) -->
@@ -1143,11 +1149,11 @@ uz.addEventListener('dragover', function(e){ e.preventDefault(); uz.classList.ad
 uz.addEventListener('dragleave', function(){ uz.classList.remove('drag'); });
 uz.addEventListener('drop', function(e){
   e.preventDefault(); uz.classList.remove('drag');
-  if(e.dataTransfer.files.length) handleFile({files:e.dataTransfer.files});
+  if(e.dataTransfer.files.length){
+    // Manually set the files on a DataTransfer to trigger handleFile
+    handleFile({files: e.dataTransfer.files});
+  }
 });
-
-// Reset composedPDF cache if imagesPerSheet chip changes
-// (already handled in selectChip above)
 </script>
 </body>
 </html>
