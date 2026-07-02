@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SmartPrint — Print smarter. Not harder.</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+
+/* ════════════════════════════════════════════════════
+   DESIGN TOKENS — from SmartPrint UI/UX Redesign Plan
+   ════════════════════════════════════════════════════ */
+:root{
+  --green:#16A34A;          /* Primary Brand */
+  --green-h:#15803D;        /* Primary Hover */
+  --blue:#2563EB;           /* AI Accent */
+  --blue-bg:#EFF6FF;        /* AI Background */
+  --bg:#F8FAFC;             /* Background */
+  --surface:#FFFFFF;        /* Cards */
+  --text:#0F172A;           /* Primary Text */
+  --muted:#64748B;          /* Secondary Text */
+  --border:#E2E8F0;         /* Borders */
+  --success:#22C55E;
+  --warning:#F59E0B;
+  --error:#EF4444;
+  --radius:18px;--radius-sm:12px;--radius-xs:9px;
+}
+body{background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;min-height:100vh;padding-bottom:48px;-webkit-font-smoothing:antialiased;}
+
+/* ── Hero / Header ── */
+header{background:linear-gradient(135deg,var(--green) 0%,var(--green-h) 100%);padding:36px 20px 40px;position:relative;overflow:hidden;}
+header::before{content:'';position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,0.08);}
+header::after{content:'';position:absolute;bottom:-40px;left:-20px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,0.06);}
+.header-inner{position:relative;z-index:1;max-width:480px;margin:0 auto;}
+.logo-row{display:flex;align-items:center;gap:8px;margin-bottom:18px;animation:fadeUp 0.5s ease both;}
+.logo-mark{width:30px;height:30px;background:rgba(255,255,255,0.18);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;}
+.logo{font-size:18px;font-weight:800;color:#fff;letter-spacing:-0.02em;}
+.logo span{opacity:0.65;font-weight:600;}
+.hero-headline{font-size:30px;font-weight:800;color:#fff;letter-spacing:-0.03em;line-height:1.15;margin-bottom:8px;animation:fadeUp 0.5s ease 0.05s both;}
+.hero-sub{font-size:14px;color:rgba(255,255,255,0.78);margin-bottom:18px;animation:fadeUp 0.5s ease 0.1s both;}
+.badge-row{display:flex;flex-wrap:wrap;gap:8px;animation:fadeUp 0.5s ease 0.15s both;}
+.hero-badge{display:flex;align-items:center;gap:5px;padding:6px 12px;background:rgba(255,255,255,0.14);backdrop-filter:blur(8px);border-radius:100px;font-size:11px;font-weight:600;color:#fff;}
+
+/* ── Main ── */
+main{padding:22px 16px 0;max-width:480px;margin:0 auto;}
+
+/* ── Section label ── */
+.section-label{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;padding-left:2px;display:flex;align-items:center;gap:6px;}
+
+/* ── Card ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(15,23,42,0.04);animation:fadeUp 0.4s ease both;}
+
+/* ── Live queue ── */
+.queue-status{display:flex;gap:10px;}
+.q-stat{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 10px;text-align:center;transition:transform 0.15s;}
+.q-stat:active{transform:scale(0.97);}
+.q-num{font-size:24px;font-weight:800;letter-spacing:-0.03em;}
+.q-lbl{font-size:10px;color:var(--muted);margin-top:3px;font-weight:600;letter-spacing:0.02em;}
+.q-num.green{color:var(--green);}
+.q-num.orange{color:var(--warning);}
+.q-num.blue{color:var(--blue);}
+
+/* ── AI Quick Request card ── */
+.ai-section-card{background:var(--blue-bg);border:1px solid #dbeafe;border-radius:var(--radius);padding:20px;margin-bottom:16px;animation:fadeUp 0.4s ease both;}
+.ai-section-title{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:700;color:var(--blue);margin-bottom:4px;}
+.ai-section-sub{font-size:12px;color:#3b5fc4;margin-bottom:12px;}
+.nlp-row{display:flex;gap:8px;}
+.nlp-row input{flex:1;padding:12px 14px;border:1.5px solid #c7d8fb;border-radius:var(--radius-xs);font-family:'Sora',sans-serif;font-size:13px;color:var(--text);background:#fff;outline:none;transition:border-color 0.15s;}
+.nlp-row input:focus{border-color:var(--blue);}
+.nlp-row button{padding:12px 16px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-xs);font-family:'Sora',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background 0.15s;}
+.nlp-row button:hover{background:#1d4ed8;}
+.nlp-row button:disabled{opacity:0.5;cursor:not-allowed;}
+
+/* ── Upload zone ── */
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius-sm);padding:40px 20px;text-align:center;cursor:pointer;transition:all 0.2s;position:relative;background:var(--bg);}
+.upload-zone.drag,.upload-zone:active{border-color:var(--green);background:#f0fdf4;transform:scale(0.99);}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-icon{font-size:36px;margin-bottom:10px;}
+.upload-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.upload-sub{font-size:12px;color:var(--muted);}
+
+/* ── File preview ── */
+.file-preview{display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--radius-sm);padding:14px;margin-top:12px;align-items:center;gap:12px;animation:fadeUp 0.3s ease both;}
+.file-preview.show{display:flex;}
+.file-icon{font-size:26px;}
+.file-info{flex:1;min-width:0;}
+.file-name{font-size:13px;font-weight:700;color:var(--green-h);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.file-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+.file-remove{background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;padding:4px;line-height:1;border-radius:6px;transition:background 0.15s;}
+.file-remove:hover{background:rgba(0,0,0,0.06);}
+
+/* ── Fields ── */
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:7px;letter-spacing:0.01em;}
+.field input,.field select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-xs);padding:13px 14px;color:var(--text);font-family:'Sora',sans-serif;font-size:14px;outline:none;transition:border-color 0.15s;-webkit-appearance:none;}
+.field input:focus,.field select:focus{border-color:var(--green);}
+
+/* ── Chips ── */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;}
+.chip{padding:9px 15px;border-radius:100px;font-size:13px;font-weight:600;border:1.5px solid var(--border);background:var(--bg);color:var(--muted);cursor:pointer;transition:all 0.15s;font-family:'Sora',sans-serif;}
+.chip:hover{border-color:#cbd5e1;}
+.chip.active{background:#dcfce7;border-color:var(--green);color:var(--green-h);}
+
+/* ── Toggles ── */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--border);}
+.toggle-row:last-child{border-bottom:none;}
+.toggle-label{font-size:14px;font-weight:600;}
+.toggle-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+.toggle{width:46px;height:27px;background:#cbd5e1;border-radius:100px;position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;border:none;outline:none;}
+.toggle.on{background:var(--green);}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;background:#fff;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.22);}
+.toggle.on::after{transform:translateX(19px);}
+
+/* ── Images per sheet (hidden by default) ── */
+.img-config{display:none;}
+.img-config.show{display:block;}
+
+/* ── Mixed colour pages ── */
+.mixed-config{display:none;margin-top:12px;}
+.mixed-config.show{display:block;animation:fadeUp 0.25s ease both;}
+.mixed-config input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-xs);padding:11px 14px;color:var(--text);font-family:'Sora',sans-serif;font-size:13px;outline:none;}
+.mixed-config input:focus{border-color:var(--green);}
+.mixed-hint{font-size:11px;color:var(--muted);margin-top:6px;}
+.mixed-summary{font-size:12px;color:var(--green-h);margin-top:6px;font-weight:600;}
+
+/* ── AI buttons (in-card) ── */
+.ai-btn{width:100%;padding:13px 16px;border:1.5px solid #bfdbfe;background:var(--blue-bg);color:var(--blue);border-radius:var(--radius-xs);font-family:'Sora',sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-top:12px;transition:all 0.2s;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px;}
+.ai-btn:hover{background:#dbeafe;}
+.ai-btn:disabled{opacity:0.6;cursor:not-allowed;}
+.ai-btn .spinner{display:inline-block;width:13px;height:13px;border:2px solid #bfdbfe;border-top-color:var(--blue);border-radius:50%;animation:spin 0.7s linear infinite;}
+
+/* ── AI result cards ── */
+.ai-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-top:12px;animation:fadeUp 0.35s ease both;}
+.ai-card h3{display:flex;align-items:center;gap:7px;margin:0 0 12px;font-size:14px;color:var(--text);font-weight:700;}
+.ai-card h4{margin:10px 0 5px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:700;}
+
+/* AI recommendation mini-cards (per redesign doc #9) */
+.ai-rec-grid{display:flex;flex-direction:column;gap:8px;}
+.ai-rec-item{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--blue-bg);border:1px solid #dbeafe;border-radius:var(--radius-xs);padding:11px 14px;animation:slideIn 0.35s ease both;}
+.ai-rec-left{display:flex;align-items:center;gap:9px;}
+.ai-rec-icon{font-size:16px;}
+.ai-rec-label{font-size:12px;color:var(--muted);font-weight:600;}
+.ai-rec-value{font-size:13px;font-weight:700;color:var(--text);}
+.ai-rec-reason{font-size:11px;color:var(--muted);margin-top:1px;}
+.confidence-pill{font-size:10px;font-weight:700;padding:3px 9px;border-radius:100px;background:#dcfce7;color:var(--green-h);text-transform:uppercase;letter-spacing:0.03em;}
+
+.doc-type-banner{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--border);border-radius:var(--radius-xs);padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--text);}
+.cost-tip{background:#f0fdf4;border-left:3px solid var(--success);padding:9px 12px;font-size:12px;color:#15803d;margin-top:10px;border-radius:6px;}
+.ai-warning-box{background:#fffbeb;border-left:3px solid var(--warning);padding:9px 12px;font-size:12px;color:#92400e;margin-top:8px;border-radius:6px;}
+.applied-note{font-size:11px;color:var(--muted);margin-top:10px;font-style:italic;display:flex;align-items:center;gap:5px;}
+
+.ai-table{width:100%;border-collapse:collapse;font-size:12px;}
+.ai-table td{padding:6px 6px;border-bottom:1px solid var(--border);}
+.ai-table .reason{color:var(--muted);font-size:11px;}
+
+.ocr-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;margin-bottom:8px;}
+.ocr-text{width:100%;height:110px;font-size:11px;font-family:'JetBrains Mono',monospace;resize:vertical;border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:5px;background:var(--bg);}
+.score-badge{font-size:14px;margin:2px 0 10px;font-weight:700;display:flex;align-items:center;gap:6px;}
+
+.understood{font-size:12px;color:#15803d;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.nlp-tags{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;}
+.nlp-tag{background:#dbeafe;color:#1d4ed8;padding:4px 11px;border-radius:20px;font-size:12px;font-weight:600;}
+.missing-note{font-size:11px;color:#92400e;background:#fef3c7;padding:6px 9px;border-radius:6px;margin-top:6px;}
+
+/* ── AI loading steps ── */
+.ai-loading-steps{display:flex;flex-direction:column;gap:9px;padding:4px 0;}
+.ai-step{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--muted);opacity:0.4;transition:opacity 0.3s;}
+.ai-step.active{opacity:1;color:var(--blue);font-weight:600;}
+.ai-step.done{opacity:0.7;color:var(--green-h);}
+.ai-step-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+
+/* ── Price box ── */
+.price-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-top:6px;}
+.price-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;color:var(--muted);}
+.price-row .val{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--text);}
+.price-row.savings .val{color:var(--green-h);}
+.price-total{border-top:1px solid var(--border);margin-top:10px;padding-top:12px;}
+.price-total .label{font-weight:700;color:var(--text);font-size:14px;}
+.price-total .val{color:var(--green);font-size:18px;font-weight:800;}
+
+/* ── Submit ── */
+.btn-submit{width:100%;padding:17px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'Sora',sans-serif;font-size:16px;font-weight:700;cursor:pointer;margin-top:18px;transition:all 0.2s;letter-spacing:0.01em;box-shadow:0 4px 14px rgba(22,163,74,0.25);}
+.btn-submit:hover{background:var(--green-h);box-shadow:0 6px 18px rgba(22,163,74,0.32);}
+.btn-submit:active{transform:scale(0.98);}
+.btn-submit:disabled{opacity:0.4;cursor:not-allowed;transform:none;box-shadow:none;}
+
+/* ── Success / Token card ── */
+.token-card{display:none;background:linear-gradient(135deg,var(--green) 0%,var(--green-h) 100%);border-radius:var(--radius);padding:36px 24px;text-align:center;margin-top:18px;position:relative;overflow:hidden;}
+.token-card::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,0.1);}
+.token-card::after{content:'';position:absolute;bottom:-30px;left:-30px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,0.07);}
+.token-card.show{display:block;animation:successPop 0.5s cubic-bezier(0.34,1.56,0.64,1) both;}
+.success-check{width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px;animation:checkPop 0.4s ease 0.2s both;position:relative;z-index:1;}
+.token-label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.2em;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-bottom:10px;position:relative;z-index:1;}
+.token-num{font-size:76px;font-weight:800;color:#fff;line-height:1;letter-spacing:-0.04em;position:relative;z-index:1;}
+.token-eta{font-size:14px;color:rgba(255,255,255,0.85);margin-top:14px;position:relative;z-index:1;}
+.token-eta strong{color:#fff;}
+.token-note{font-size:12px;color:rgba(255,255,255,0.65);margin-top:10px;position:relative;z-index:1;}
+.token-divider{width:36px;height:2px;background:rgba(255,255,255,0.25);margin:16px auto;position:relative;z-index:1;}
+
+/* ── Toast ── */
+.sp-toast{position:fixed;bottom:24px;right:16px;left:16px;max-width:360px;margin:0 auto;background:var(--text);color:#fff;padding:13px 18px;border-radius:12px;font-size:13px;font-weight:500;opacity:0;transform:translateY(12px);transition:all 0.25s;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.18);}
+.sp-toast.show{opacity:1;transform:translateY(0);}
+.sp-toast.error{background:var(--error);}
+.sp-toast.warn{background:var(--warning);}
+
+/* ── Multi-image thumbnail grid ── */
+.img-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
+.img-thumb{aspect-ratio:1;border-radius:8px;background:#f1f5f9;border:1px solid var(--border);overflow:hidden;position:relative;}
+.img-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.img-thumb-more{display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--muted);background:#f1f5f9;}
+.img-count-banner{display:flex;align-items:center;justify-content:space-between;margin-top:10px;font-size:12px;color:var(--muted);}
+.img-count-banner strong{color:var(--text);}
+.img-add-more{font-size:12px;font-weight:600;color:var(--blue);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;}
+
+/* ── Compose progress banner ── */
+.compose-banner{display:flex;align-items:center;gap:10px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:var(--radius-xs);padding:12px 14px;margin-top:10px;font-size:13px;color:var(--blue);font-weight:600;}
+.compose-banner .spinner{width:14px;height:14px;border:2px solid #bfdbfe;border-top-color:var(--blue);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;}
+.compose-done{background:#f0fdf4;border-color:#bbf7d0;color:#15803d;}
+.compose-done .spinner{display:none;}
+
+/* ── Animations ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-8px);}to{opacity:1;transform:translateX(0);}}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes successPop{0%{opacity:0;transform:scale(0.85);}100%{opacity:1;transform:scale(1);}}
+@keyframes checkPop{0%{transform:scale(0);}70%{transform:scale(1.15);}100%{transform:scale(1);}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo-row">
+      <div class="logo-mark">🖨️</div>
+      <div class="logo">Smart<span>Print</span></div>
+    </div>
+    <div class="hero-sub">AI-powered cloud printing for students.</div>
+    <div class="badge-row">
+      <div class="hero-badge">🤖 AI Assistant</div>
+      <div class="hero-badge">⚡ Live Queue</div>
+      <div class="hero-badge">💰 Instant Cost Estimate</div>
+      <div class="hero-badge">🔒 Secure Cloud Printing</div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- Queue Status -->
+  <div class="section-label">⚡ Live queue</div>
+  <div class="queue-status" style="margin-bottom:20px;">
+    <div class="q-stat">
+      <div class="q-num orange" id="qJobs">—</div>
+      <div class="q-lbl">Jobs ahead</div>
+    </div>
+    <div class="q-stat">
+      <div class="q-num blue" id="qWait">—</div>
+      <div class="q-lbl">Est. wait</div>
+    </div>
+    <div class="q-stat">
+      <div class="q-num green">✓</div>
+      <div class="q-lbl">Printer online</div>
+    </div>
+  </div>
+
+  <!-- ── FEATURE 5: Natural Language Request ── -->
+  <div class="ai-section-card">
+    <div class="ai-section-title">💬 Quick request</div>
+    <div class="ai-section-sub">Just describe what you need, e.g. "2 copies black and white double sided urgent"</div>
+    <div class="nlp-row">
+      <input type="text" id="nlpInput" placeholder="Type your print request here…">
+      <button id="btnNlp" onclick="parseNLRequest()">⚙️ Apply</button>
+    </div>
+    <div id="nlpResult"></div>
+  </div>
+
+  <!-- Document -->
+  <div class="section-label">📄 Your document</div>
+  <div class="card">
+    <div class="upload-zone" id="uploadZone">
+      <div class="upload-icon">📄</div>
+      <div class="upload-title">Tap to upload file</div>
+      <div class="upload-sub">PDF, Word — or select multiple JPG/PNG images</div>
+      <input type="file" id="fileInput" accept=".pdf,.docx,.doc,.jpg,.jpeg,.png" multiple onchange="handleFile(this)">
+    </div>
+
+    <!-- Single file preview (PDF/doc) -->
+    <div class="file-preview" id="filePreview">
+      <div class="file-icon" id="fileIcon">📄</div>
+      <div class="file-info">
+        <div class="file-name" id="fileName">document.pdf</div>
+        <div class="file-meta" id="fileMeta">PDF · 12 pages</div>
+      </div>
+      <button class="file-remove" onclick="removeFile()">×</button>
+    </div>
+
+    <!-- Multi-image preview (images only) -->
+    <div id="imgPreviewArea" style="display:none;">
+      <div class="img-grid" id="imgGrid"></div>
+      <div class="img-count-banner">
+        <span><strong id="imgCountLabel">0 images</strong> selected</span>
+        <button class="img-add-more" onclick="document.getElementById('fileInput').click()">+ Add more</button>
+      </div>
+      <div id="composeBanner" class="compose-banner" style="display:none;">
+        <span class="spinner"></span>
+        <span id="composeBannerText">Composing images into PDF…</span>
+      </div>
+    </div>
+
+    <!-- ── FEATURE 1: AI Print Assistant ── -->
+    <button class="ai-btn" id="btnAI" onclick="runAIAssistant()">✨ Analyse with SmartPrint AI</button>
+    <div id="aiResult"></div>
+
+    <!-- ── FEATURE 2: OCR ── -->
+    <button class="ai-btn" id="btnOCR" onclick="runOCR()" style="display:none;">🔍 Extract Text (OCR)</button>
+    <div id="ocrResult"></div>
+  </div>
+
+  <!-- Your details -->
+  <div class="section-label">👤 Your details</div>
+  <div class="card">
+    <div class="field">
+      <label>Name</label>
+      <input type="text" id="studentName" placeholder="e.g. Loan Lelo" oninput="checkSubmit()">
+    </div>
+    <div class="field" style="margin-bottom:0">
+      <label>WhatsApp Number</label>
+      <input type="tel" id="whatsappNum" placeholder="+91 6397 013586">
+    </div>
+  </div>
+
+  <!-- Print config -->
+  <div class="section-label">🖨 Print settings</div>
+  <div class="card">
+
+    <!-- Colour mode (PDF/doc) -->
+    <div id="colorSection">
+      <div class="field">
+        <label>Colour Mode</label>
+        <div class="chips" id="colorChips">
+          <div class="chip active" onclick="selectChip('colorChips',this,'bw')">⬛ All B&W</div>
+          <div class="chip" onclick="selectChip('colorChips',this,'color')">🌈 All Colour</div>
+          <div class="chip" onclick="selectChip('colorChips',this,'mixed')">🎨 Mixed</div>
+        </div>
+        <div class="mixed-config" id="mixedConfig">
+          <input type="text" id="colorPages" placeholder="e.g. 1, 5-10, 15" oninput="updateMixedSummary()">
+          <div class="mixed-hint">Enter page numbers that should be printed in colour. Rest will be B&W.</div>
+          <div class="mixed-summary" id="mixedSummary"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Images per sheet (images only) -->
+    <div class="img-config" id="imgConfig">
+      <div class="field">
+        <label>Images per Sheet</label>
+        <div class="chips" id="ipsChips">
+          <div class="chip active" onclick="selectChip('ipsChips',this,'1')">1</div>
+          <div class="chip" onclick="selectChip('ipsChips',this,'2')">2</div>
+          <div class="chip" onclick="selectChip('ipsChips',this,'4')">4</div>
+          <div class="chip" onclick="selectChip('ipsChips',this,'6')">6</div>
+          <div class="chip" onclick="selectChip('ipsChips',this,'9')">9</div>
+          <div class="chip" onclick="selectChip('ipsChips',this,'12')">12</div>
+        </div>
+        <div style="margin-top:8px;" id="imgSheetNote"></div>
+      </div>
+      <div class="field">
+        <label>Image Colour</label>
+        <div class="chips" id="imgColorChips">
+          <div class="chip active" onclick="selectChip('imgColorChips',this,'bw')">⬛ B&W</div>
+          <div class="chip" onclick="selectChip('imgColorChips',this,'color')">🌈 Colour</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Sides</label>
+      <div class="chips" id="sideChips">
+        <div class="chip active" onclick="selectChip('sideChips',this,'single')">Single sided</div>
+        <div class="chip" onclick="selectChip('sideChips',this,'double')">Double sided</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Number of Copies</label>
+      <input type="number" id="copies" value="1" min="1" max="50" oninput="updatePrice()">
+    </div>
+
+    <div class="field">
+      <label>Paper Size</label>
+      <select id="paperSize">
+        <option>A4 (default)</option>
+        <option>A3</option>
+        <option>Letter</option>
+      </select>
+    </div>
+
+    <div class="field" id="pageRangeField" style="margin-bottom:0">
+      <label>Page Range <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+      <input type="text" id="pageRange" placeholder="e.g. 1-5, 8, 11-13 · blank = all pages">
+    </div>
+
+    <div style="margin-top:14px;">
+      <div class="toggle-row">
+        <div><div class="toggle-label">Staple pages</div><div class="toggle-sub">Staple all sheets together</div></div>
+        <button class="toggle" id="toggleStaple" onclick="this.classList.toggle('on')"></button>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">⚡ Urgent print</div><div class="toggle-sub">Move to front of queue (+₹5)</div></div>
+        <button class="toggle" id="toggleUrgent" onclick="this.classList.toggle('on');updatePrice()"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FEATURE 3: AI Print Preview Check ── -->
+  <div class="section-label">👁 Preview check</div>
+  <div class="card">
+    <div style="font-size:13px;color:var(--muted);margin-bottom:4px;">Detect issues before submitting — cropped content, low resolution, B&W compatibility.</div>
+    <button class="ai-btn" id="btnPreview" onclick="runPreviewCheck()">👁 Check Print Preview</button>
+    <div id="previewResult"></div>
+  </div>
+
+  <!-- Price -->
+  <div class="section-label">💰 Price estimate</div>
+  <div class="card">
+    <div class="price-box">
+      <div class="price-row"><span>Pages / Sheets</span><span class="val" id="prPages">—</span></div>
+      <div class="price-row"><span>Mode</span><span class="val" id="prMode">B&W (₹2/pg)</span></div>
+      <div class="price-row"><span>Copies</span><span class="val" id="prCopies">1</span></div>
+      <div class="price-row"><span>Print cost</span><span class="val" id="prCost">—</span></div>
+      <div class="price-row"><span>Urgent fee</span><span class="val" id="prUrgent">—</span></div>
+      <div class="price-row price-total"><span class="label">Total</span><span class="val" id="prTotal">—</span></div>
+    </div>
+    <div style="margin-top:14px;">
+      <div class="toggle-row">
+        <div><div class="toggle-label">Pay via UPI now</div><div class="toggle-sub">Skip payment at shop</div></div>
+        <button class="toggle" id="togglePay" onclick="this.classList.toggle('on')"></button>
+      </div>
+    </div>
+    <button class="btn-submit" id="submitBtn" onclick="submitJob()" disabled>Submit Print Job →</button>
+  </div>
+
+  <!-- Token / Success -->
+  <div class="token-card" id="tokenCard">
+    <div class="success-check">✓</div>
+    <div class="token-label">Your token number</div>
+    <div class="token-num" id="tokenNum">—</div>
+    <div class="token-divider"></div>
+    <div class="token-eta">Come in approx. <strong id="tokenEta">8–12 min</strong></div>
+    <div class="token-note">You'll get a WhatsApp alert when ready 📱</div>
+  </div>
+
+</main>
+
+<div class="sp-toast" id="spToast"></div>
+
+<script>
+const BACKEND_URL =
+    window.location.hostname === "localhost"
+        ? "http://localhost:3000"
+        : "https://smart-print-production.up.railway.app";
+var cfg = {type:'doc',color:'bw',sides:'single',pages:0,copies:1,imgPerSheet:1,imgColor:'bw',colorRanges:[]};
+
+// ── Toast ──
+function toast(msg, type) {
+  var el = document.getElementById('spToast');
+  el.textContent = msg;
+  el.className = 'sp-toast show' + (type ? ' ' + type : '');
+  clearTimeout(el._t);
+  el._t = setTimeout(function(){ el.classList.remove('show'); }, 3500);
+}
+
+// ── Load queue count ──
+fetch(BACKEND_URL+'/api/jobs').then(function(r){return r.json();}).then(function(jobs){
+  var pending = jobs.length;
+  document.getElementById('qJobs').textContent = pending;
+  document.getElementById('qWait').textContent = '~'+(pending*2+2)+' min';
+}).catch(function(){
+  document.getElementById('qJobs').textContent = '0';
+  document.getElementById('qWait').textContent = '~2 min';
+});
+
+// ── File handling ──
+// Tracks selected image files across multiple selections
+var selectedImageFiles = [];
+// Stores the composed PDF info after /api/compose-images returns
+var composedPDF = null; // { fileUrl, fileName, pages }
+
+function handleFile(input){
+  if(!input.files||!input.files[0]) return;
+
+  // Determine if any selected file is an image
+  var allFiles = Array.from(input.files);
+  var firstExt = allFiles[0].name.split('.').pop().toLowerCase();
+  var isImg = (firstExt==='jpg'||firstExt==='jpeg'||firstExt==='png');
+
+  // If mixed (e.g. user accidentally picked a PDF alongside images), filter to images only
+  if(isImg) {
+    var imgFiles = allFiles.filter(function(f){
+      var e = f.name.split('.').pop().toLowerCase();
+      return e==='jpg'||e==='jpeg'||e==='png';
+    });
+    handleImageFiles(imgFiles);
+    return;
+  }
+
+  // Single document (PDF/DOC)
+  cfg.type = 'doc';
+  cfg.pages = 0;
+  composedPDF = null;
+  selectedImageFiles = [];
+
+  var file = allFiles[0];
+  var ext = firstExt;
+  var icons = {pdf:'📄',doc:'📝',docx:'📝'};
+
+  document.getElementById('fileIcon').textContent = icons[ext]||'📄';
+  document.getElementById('fileName').textContent = file.name;
+  document.getElementById('fileMeta').textContent = ext.toUpperCase()+' · Detecting pages… · '+(file.size/1048576).toFixed(1)+' MB';
+
+  document.getElementById('uploadZone').style.display = 'none';
+  document.getElementById('filePreview').classList.add('show');
+  document.getElementById('imgPreviewArea').style.display = 'none';
+
+  document.getElementById('colorSection').style.display = 'block';
+  document.getElementById('imgConfig').style.display = 'none';
+  document.getElementById('imgConfig').classList.remove('show');
+  document.getElementById('pageRangeField').style.display = 'block';
+  document.getElementById('btnOCR').style.display = 'none';
+
+  // Get real page count from server
+  var fd = new FormData();
+  fd.append('file', file);
+  fetch(BACKEND_URL+'/api/page-count', {method:'POST', body:fd})
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(!data.success) return;
+      cfg.pages = data.pages;
+      document.getElementById('fileMeta').textContent =
+        ext.toUpperCase()+' · '+data.pages+' pages · '+(file.size/1048576).toFixed(1)+' MB';
+      updatePrice(); checkSubmit();
+    })
+    .catch(console.error);
+
+  updatePrice(); checkSubmit();
+}
+
+function handleImageFiles(newFiles){
+  // Merge with already-selected images (so "Add more" works)
+  selectedImageFiles = selectedImageFiles.concat(newFiles);
+  composedPDF = null; // reset — needs recomposing
+
+  cfg.type = 'img';
+  cfg.imgCount = selectedImageFiles.length;
+  cfg.pages = Math.ceil(selectedImageFiles.length / cfg.imgPerSheet);
+
+  // Hide single-file preview, show image grid
+  document.getElementById('uploadZone').style.display = 'none';
+  document.getElementById('filePreview').classList.remove('show');
+  document.getElementById('imgPreviewArea').style.display = 'block';
+  document.getElementById('composeBanner').style.display = 'none';
+
+  document.getElementById('colorSection').style.display = 'none';
+  document.getElementById('imgConfig').style.display = 'block';
+  document.getElementById('imgConfig').classList.add('show');
+  document.getElementById('pageRangeField').style.display = 'none';
+  document.getElementById('btnOCR').style.display = selectedImageFiles.length===1 ? 'block' : 'none';
+
+  renderImageGrid();
+  updatePrice(); checkSubmit();
+}
+
+function renderImageGrid(){
+  var grid = document.getElementById('imgGrid');
+  var count = selectedImageFiles.length;
+  var maxShow = 7; // show up to 7 thumbs + 1 overflow cell
+
+  document.getElementById('imgCountLabel').textContent =
+    count+' image'+(count>1?'s':'');
+
+  grid.innerHTML = '';
+  var show = Math.min(count, count > maxShow ? maxShow : count);
+  for(var i=0; i<show; i++){
+    var thumb = document.createElement('div');
+    thumb.className = 'img-thumb';
+    var img = document.createElement('img');
+    img.src = URL.createObjectURL(selectedImageFiles[i]);
+    thumb.appendChild(img);
+    grid.appendChild(thumb);
+  }
+  if(count > maxShow){
+    var more = document.createElement('div');
+    more.className = 'img-thumb img-thumb-more';
+    more.textContent = '+' + (count - maxShow);
+    grid.appendChild(more);
+  }
+}
+
+function removeFile(){
+  cfg.pages = 0; cfg.type = 'doc';
+  composedPDF = null;
+  selectedImageFiles = [];
+
+  document.getElementById('uploadZone').style.display = '';
+  document.getElementById('filePreview').classList.remove('show');
+  document.getElementById('imgPreviewArea').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+  document.getElementById('colorSection').style.display = 'block';
+  document.getElementById('imgConfig').classList.remove('show');
+  document.getElementById('imgConfig').style.display = 'none';
+  document.getElementById('pageRangeField').style.display = 'block';
+  document.getElementById('btnOCR').style.display = 'none';
+  document.getElementById('aiResult').innerHTML = '';
+  document.getElementById('ocrResult').innerHTML = '';
+  document.getElementById('previewResult').innerHTML = '';
+  updatePrice(); checkSubmit();
+}
+
+function removeFile(){
+  cfg.pages = 0; cfg.type = 'doc';
+  document.getElementById('uploadZone').style.display = '';
+  document.getElementById('filePreview').classList.remove('show');
+  document.getElementById('fileInput').value = '';
+  document.getElementById('colorSection').style.display = 'block';
+  document.getElementById('imgConfig').classList.remove('show');
+  document.getElementById('pageRangeField').style.display = 'block';
+  document.getElementById('btnOCR').style.display = 'none';
+  document.getElementById('aiResult').innerHTML = '';
+  document.getElementById('ocrResult').innerHTML = '';
+  document.getElementById('previewResult').innerHTML = '';
+  updatePrice(); checkSubmit();
+}
+
+function selectChip(gid, el, val){
+  document.querySelectorAll('#'+gid+' .chip').forEach(function(c){c.classList.remove('active');});
+  el.classList.add('active');
+  if(gid==='colorChips'){ cfg.color=val; document.getElementById('mixedConfig').classList.toggle('show',val==='mixed'); }
+  if(gid==='sideChips') cfg.sides = val;
+  if(gid==='ipsChips'){
+    cfg.imgPerSheet=parseInt(val);
+    // Recalculate pages based on new layout
+    if(selectedImageFiles.length > 0){
+      cfg.pages = Math.ceil(selectedImageFiles.length / cfg.imgPerSheet);
+      composedPDF = null; // layout changed — needs recomposing
+    }
+    updateImgNote();
+  }
+  if(gid==='imgColorChips') cfg.imgColor = val;
+  updatePrice();
+}
+
+function updateImgNote(){
+  var note = document.getElementById('imgSheetNote');
+  if(cfg.pages>0){
+    var sheets = Math.ceil(cfg.pages/cfg.imgPerSheet);
+    note.innerHTML = '<span style="font-size:12px;color:var(--muted)">'+cfg.pages+' image'+(cfg.pages>1?'s':'')+' ÷ '+cfg.imgPerSheet+'/sheet = '+sheets+' sheet'+(sheets>1?'s':'')+'</span>';
+  }
+}
+
+function updateMixedSummary(){
+  var val = document.getElementById('colorPages').value.trim();
+  var summary = document.getElementById('mixedSummary');
+  if(!val){ summary.textContent=''; return; }
+  var colourPages = parsePageRanges(val);
+  var bwPages = Math.max(0,(cfg.pages||10)-colourPages.length);
+  summary.textContent = '🌈 ~'+colourPages.length+' colour pages + ⬛ ~'+bwPages+' B&W pages';
+  cfg.colorRanges = [val];
+}
+
+function parsePageRanges(str){
+  var pages = [];
+  str.split(',').forEach(function(part){
+    part = part.trim();
+    if(part.includes('-')){ var r=part.split('-'); for(var i=parseInt(r[0]);i<=parseInt(r[1]);i++) pages.push(i); }
+    else if(parseInt(part)) pages.push(parseInt(part));
+  });
+  return pages;
+}
+
+function updatePrice(){
+  var copies = parseInt(document.getElementById('copies').value)||1;
+  cfg.copies = copies;
+  var urgent = document.getElementById('toggleUrgent').classList.contains('on');
+  var pages = cfg.pages||0;
+  var sheets, cost;
+
+  if(cfg.type==='img'){
+    sheets = Math.ceil(pages/cfg.imgPerSheet);
+    var rate = cfg.imgColor==='color' ? 5 : 2;
+    cost = sheets*copies*rate;
+    document.getElementById('prMode').textContent = cfg.imgColor==='color'?'Colour (₹5/pg)':'B&W (₹2/pg)';
+    document.getElementById('prPages').textContent = pages ? sheets+' sheet'+(sheets>1?'s':'') : '—';
+  } else {
+    sheets = pages;
+    var colourPgs = cfg.color==='mixed' ? parsePageRanges(document.getElementById('colorPages').value||'').length : 0;
+    var bwPgs = cfg.color==='mixed' ? (pages-colourPgs) : pages;
+    var colCost = cfg.color==='color'?pages*5:cfg.color==='mixed'?colourPgs*5:0;
+    var bwCost = cfg.color==='bw'?pages*2:cfg.color==='mixed'?bwPgs*2:0;
+    cost = (colCost+bwCost)*copies;
+    if(cfg.color==='bw') document.getElementById('prMode').textContent='All B&W (₹2/pg)';
+    else if(cfg.color==='color') document.getElementById('prMode').textContent='All Colour (₹5/pg)';
+    else document.getElementById('prMode').textContent='Mixed colour';
+    document.getElementById('prPages').textContent = pages ? pages+' pages' : '—';
+  }
+
+  var urgentFee = urgent ? 5 : 0;
+  var total = pages ? cost+urgentFee : 0;
+  document.getElementById('prCopies').textContent = copies;
+  document.getElementById('prCost').textContent = pages ? '₹'+cost : '—';
+  document.getElementById('prUrgent').textContent = urgentFee ? '₹5' : '—';
+  document.getElementById('prTotal').textContent = pages ? '₹'+total : '—';
+  checkSubmit();
+}
+
+function checkSubmit(){
+  var name = document.getElementById('studentName').value.trim();
+  document.getElementById('submitBtn').disabled = !(name && cfg.pages > 0);
+}
+
+// ────────────────────────────────────────────────
+// FEATURE 1: AI Print Assistant
+// ────────────────────────────────────────────────
+async function runAIAssistant(){
+  var fileInput = document.getElementById('fileInput');
+  if(!fileInput.files||!fileInput.files[0]){ toast('Upload a file first','warn'); return; }
+  var btn = document.getElementById('btnAI');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Analysing…';
+
+  // Sequential loading steps (per redesign doc #8)
+  var resultBox = document.getElementById('aiResult');
+  var steps = ['Reading document','Detecting document type','Estimating cost','Choosing best settings'];
+  resultBox.innerHTML = '<div class="ai-card"><div class="ai-loading-steps" id="aiSteps"></div></div>';
+  var stepsEl = document.getElementById('aiSteps');
+  stepsEl.innerHTML = steps.map(function(s,i){ return '<div class="ai-step" id="aiStep'+i+'"><span class="ai-step-dot"></span>'+s+'</div>'; }).join('');
+  var stepTimer = null;
+  var curStep = 0;
+  function advanceStep(){
+    if(curStep>0) document.getElementById('aiStep'+(curStep-1)).classList.replace('active','done');
+    if(curStep < steps.length){ document.getElementById('aiStep'+curStep).classList.add('active'); curStep++; }
+  }
+  advanceStep();
+  stepTimer = setInterval(advanceStep, 450);
+
+  try {
+    var fd = new FormData();
+    fd.append('file', fileInput.files[0]);
+    var res = await fetch(BACKEND_URL+'/api/ai/analyze', {method:'POST', body:fd});
+    var data = await res.json();
+    if (!data.success) {
+    throw new Error(data.error || "Unknown AI error");
+     }
+    var r = data.recommendation;
+
+    // Auto-apply settings
+    var colorMap = {bw:'bw', color:'color'};
+    if(colorMap[r.colorMode]){
+      document.querySelectorAll('#colorChips .chip').forEach(function(c){ c.classList.remove('active'); });
+      document.querySelectorAll('#colorChips .chip').forEach(function(c){
+        if(c.getAttribute('onclick') && c.getAttribute('onclick').includes("'"+r.colorMode+"'")) c.classList.add('active');
+      });
+      cfg.color = r.colorMode;
+    }
+    if(r.sides){
+      document.querySelectorAll('#sideChips .chip').forEach(function(c){ c.classList.remove('active'); });
+      document.querySelectorAll('#sideChips .chip').forEach(function(c){
+        if(c.getAttribute('onclick') && c.getAttribute('onclick').includes("'"+r.sides+"'")) c.classList.add('active');
+      });
+      cfg.sides = r.sides;
+    }
+    if(r.copies) document.getElementById('copies').value = r.copies;
+    updatePrice();
+
+    clearInterval(stepTimer);
+
+    document.getElementById('aiResult').innerHTML =
+      '<div class="ai-card">' +
+        '<h3>✨ AI Recommendation <span class="confidence-pill">High confidence</span></h3>' +
+        '<div class="doc-type-banner">📄 Detected as: <strong>'+r.documentType+'</strong></div>' +
+        '<div class="ai-rec-grid">' +
+          '<div class="ai-rec-item"><div class="ai-rec-left"><span class="ai-rec-icon">'+(r.colorMode==='bw'?'⬛':'🌈')+'</span><div><div class="ai-rec-label">Colour Mode</div><div class="ai-rec-reason">'+r.reasoning.colorMode+'</div></div></div><div class="ai-rec-value">'+r.colorMode.toUpperCase()+'</div></div>' +
+          '<div class="ai-rec-item"><div class="ai-rec-left"><span class="ai-rec-icon">📐</span><div><div class="ai-rec-label">Orientation</div><div class="ai-rec-reason">'+r.reasoning.orientation+'</div></div></div><div class="ai-rec-value">'+r.orientation+'</div></div>' +
+          '<div class="ai-rec-item"><div class="ai-rec-left"><span class="ai-rec-icon">📄</span><div><div class="ai-rec-label">Sides</div><div class="ai-rec-reason">'+r.reasoning.sides+'</div></div></div><div class="ai-rec-value">'+r.sides+'-sided</div></div>' +
+        '</div>' +
+        (r.costTip ? '<p class="cost-tip">💰 '+r.costTip+'</p>' : '') +
+        (r.warning ? '<p class="ai-warning-box">⚠️ '+r.warning+'</p>' : '') +
+        '<p class="applied-note">✅ Settings automatically applied to your form below.</p>' +
+      '</div>';
+  } catch(e) {
+    clearInterval(stepTimer);
+    document.getElementById('aiResult').innerHTML = '';
+    toast('AI analysis failed: '+e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.innerHTML = '✨ Analyse with SmartPrint AI';
+  }
+}
+
+// ────────────────────────────────────────────────
+// FEATURE 2: OCR
+// ────────────────────────────────────────────────
+async function runOCR(){
+  var fileInput = document.getElementById('fileInput');
+  if(!fileInput.files||!fileInput.files[0]){ toast('Upload an image first','warn'); return; }
+  var btn = document.getElementById('btnOCR');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Extracting…';
+
+  try {
+    var fd = new FormData();
+    fd.append('file', fileInput.files[0]);
+    var res = await fetch(BACKEND_URL+'/api/ai/ocr', {method:'POST', body:fd});
+    var data = await res.json();
+    if(!data.success) throw new Error(data.error);
+
+    var issueHtml = data.qualityIssues && data.qualityIssues.length
+      ? data.qualityIssues.map(function(i){ return '<li>⚠️ '+i+'</li>'; }).join('')
+      : '<li>✅ No quality issues</li>';
+
+    document.getElementById('ocrResult').innerHTML =
+      '<div class="ai-card">' +
+        '<h3>🔍 OCR Result</h3>' +
+        '<div class="ocr-meta">' +
+          '<span>Orientation: <strong>'+(data.detectedOrientation||'—')+'</strong></span>' +
+          '<span>Confidence: <strong>'+(data.confidence||'—')+'</strong></span>' +
+          '<span>Print Ready: <strong>'+(data.printReady?'✅':'❌')+'</strong></span>' +
+        '</div>' +
+        '<h4>Extracted Text</h4>' +
+        '<textarea class="ocr-text" readonly>'+(data.extractedText||'(No text found)')+'</textarea>' +
+        '<h4>Quality</h4><ul style="font-size:12px;padding-left:16px;">'+issueHtml+'</ul>' +
+        (data.suggestedFixes&&data.suggestedFixes.length ? '<h4>Tips</h4><ul style="font-size:12px;padding-left:16px;">'+data.suggestedFixes.map(function(f){ return '<li>💡 '+f+'</li>'; }).join('')+'</ul>' : '') +
+      '</div>';
+  } catch(e) {
+    toast('OCR failed: '+e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.innerHTML = '🔍 Extract Text (OCR)';
+  }
+}
+
+// ────────────────────────────────────────────────
+// FEATURE 3: AI Print Preview Check
+// ────────────────────────────────────────────────
+async function runPreviewCheck(){
+  var fileInput = document.getElementById('fileInput');
+  if(!fileInput.files||!fileInput.files[0]){ toast('Upload a file first','warn'); return; }
+  var btn = document.getElementById('btnPreview');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Checking…';
+
+  try {
+    var fd = new FormData();
+    fd.append('file', fileInput.files[0]);
+    fd.append('color', cfg.type==='img' ? cfg.imgColor : cfg.color);
+    fd.append('sides', cfg.sides);
+    fd.append('copies', cfg.copies);
+    var res = await fetch(BACKEND_URL+'/api/ai/preview-check', {method:'POST', body:fd});
+    var data = await res.json();
+    if(!data.success) throw new Error(data.error);
+
+    var scoreColor = data.overallScore==='good'?'var(--success)':data.overallScore==='fair'?'var(--warning)':'var(--error)';
+    var scoreIcon = data.overallScore==='good'?'✅':data.overallScore==='fair'?'⚠️':'❌';
+
+    document.getElementById('previewResult').innerHTML =
+      '<div class="ai-card">' +
+        '<h3>👁 Preview Check</h3>' +
+        '<p class="score-badge" style="color:'+scoreColor+'">'+scoreIcon+' Result: '+data.overallScore.toUpperCase()+'</p>' +
+        (data.issues&&data.issues.length ? '<h4>Issues</h4><ul style="font-size:12px;padding-left:16px;">'+data.issues.map(function(i){ return '<li>❌ '+i+'</li>'; }).join('')+'</ul>' : '<p style="font-size:12px;color:#15803d;">✅ No critical issues</p>') +
+        (data.warnings&&data.warnings.length ? '<h4>Warnings</h4><ul style="font-size:12px;padding-left:16px;">'+data.warnings.map(function(w){ return '<li>⚠️ '+w+'</li>'; }).join('')+'</ul>' : '') +
+        (data.previewNotes&&data.previewNotes.length ? '<h4>What to expect</h4><ul style="font-size:12px;padding-left:16px;">'+data.previewNotes.map(function(n){ return '<li>📄 '+n+'</li>'; }).join('')+'</ul>' : '') +
+        (data.willLookGoodBW===false ? '<p class="ai-warning-box">⚠️ May not look good in B&W — consider colour printing.</p>' : '') +
+      '</div>';
+  } catch(e) {
+    toast('Preview check failed: '+e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.innerHTML = '👁 Check Print Preview';
+  }
+}
+
+// ────────────────────────────────────────────────
+// FEATURE 5: Natural Language Request
+// ────────────────────────────────────────────────
+async function parseNLRequest(){
+  var input = document.getElementById('nlpInput');
+  if(!input.value.trim()){ toast('Type a request first','warn'); return; }
+  var btn = document.getElementById('btnNlp');
+  btn.disabled = true; btn.textContent = '⏳';
+
+  try {
+    var res = await fetch(BACKEND_URL+'/api/ai/parse-request', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({text: input.value.trim()})
+    });
+    var data = await res.json();
+    if(!data.success) throw new Error(data.error);
+    var s = data.settings;
+
+    // Apply to form
+    cfg.color = s.color; cfg.sides = s.sides; cfg.copies = s.copies;
+    document.querySelectorAll('#colorChips .chip').forEach(function(c){ c.classList.remove('active'); });
+    document.querySelectorAll('#colorChips .chip').forEach(function(c){
+      if(c.getAttribute('onclick')&&c.getAttribute('onclick').includes("'"+s.color+"'")) c.classList.add('active');
+    });
+    document.querySelectorAll('#sideChips .chip').forEach(function(c){ c.classList.remove('active'); });
+    document.querySelectorAll('#sideChips .chip').forEach(function(c){
+      if(c.getAttribute('onclick')&&c.getAttribute('onclick').includes("'"+s.sides+"'")) c.classList.add('active');
+    });
+    document.getElementById('copies').value = s.copies;
+    if(s.urgent) document.getElementById('toggleUrgent').classList.add('on');
+    updatePrice();
+
+    document.getElementById('nlpResult').innerHTML =
+      '<div class="ai-card" style="margin-top:10px;">' +
+        '<p class="understood">✅ '+s.understood+'</p>' +
+        '<div class="nlp-tags">' +
+          '<span class="nlp-tag">🎨 '+s.color.toUpperCase()+'</span>' +
+          '<span class="nlp-tag">📄 '+s.sides+'-sided</span>' +
+          '<span class="nlp-tag">🔢 '+s.copies+' cop'+(s.copies>1?'ies':'y')+'</span>' +
+          (s.urgent?'<span class="nlp-tag" style="background:#fee2e2;color:#b91c1c;">🚨 Urgent</span>':'') +
+        '</div>' +
+        (s.missingInfo&&s.missingInfo.length ? '<p class="missing-note">Also consider: '+s.missingInfo.join(', ')+'</p>' : '') +
+      '</div>';
+  } catch(e) {
+    toast('Could not parse: '+e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '⚙️ Apply';
+  }
+}
+
+// ────────────────────────────────────────────────
+// Submit Job
+// For image jobs: compose first → then submit PDF URL
+// For doc/PDF jobs: submit file directly as before
+// ────────────────────────────────────────────────
+async function submitJob(){
+  var name = document.getElementById('studentName').value.trim();
+  var urgent = document.getElementById('toggleUrgent').classList.contains('on');
+  var copies = parseInt(document.getElementById('copies').value)||1;
+  var paid = document.getElementById('togglePay').classList.contains('on');
+  var eta = urgent ? '2–4 min' : (3*2+2)+'–'+(3*3+4)+' min';
+
+  var btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+
+  try {
+    var fileUrl = '';
+    var fileName = '';
+    var pages = cfg.pages;
+
+    // ── IMAGE JOB: compose first if not already done ──
+    if(cfg.type === 'img' && selectedImageFiles.length > 0){
+
+      if(!composedPDF){
+        // Show compose progress
+        btn.textContent = 'Composing images…';
+        var banner = document.getElementById('composeBanner');
+        banner.style.display = 'flex';
+        banner.className = 'compose-banner';
+        document.getElementById('composeBannerText').textContent =
+          'Composing '+selectedImageFiles.length+' image'+(selectedImageFiles.length>1?'s':'')+' into PDF…';
+
+        var fd = new FormData();
+        selectedImageFiles.forEach(function(f){ fd.append('images', f); });
+        fd.append('imagesPerSheet', cfg.imgPerSheet || 1);
+
+        var composeRes = await fetch(BACKEND_URL+'/api/compose-images', {method:'POST', body:fd});
+        var composeData = await composeRes.json();
+        if(!composeData.success) throw new Error(composeData.error || 'Image composition failed');
+
+        composedPDF = composeData; // cache it so re-submits don't recompose
+        banner.className = 'compose-banner compose-done';
+        document.getElementById('composeBannerText').textContent =
+          '✅ PDF ready — '+composeData.pages+' page'+(composeData.pages>1?'s':'')+' · submitting…';
+      }
+
+      fileUrl = composedPDF.fileUrl;
+      fileName = composedPDF.fileName;
+      pages = composedPDF.pages;
+      btn.textContent = 'Submitting…';
+    }
+
+    // ── DOC/PDF JOB: build standard formData with file attachment ──
+    var formData = new FormData();
+    formData.append('name', name);
+    formData.append('whatsapp', document.getElementById('whatsappNum').value);
+    formData.append('color', cfg.type==='img' ? cfg.imgColor : cfg.color);
+    formData.append('sides', cfg.sides);
+    formData.append('copies', copies);
+    formData.append('urgent', urgent);
+    formData.append('paid', paid);
+    formData.append('pages', pages);
+    formData.append('colorRanges', JSON.stringify(cfg.colorRanges||[]));
+    formData.append('fileType', cfg.type);
+    formData.append('imgPerSheet', cfg.imgPerSheet||1);
+
+    if(cfg.type === 'img'){
+      // For image jobs: the composed PDF is already on the server.
+      // We pass its URL/name as metadata — no re-upload needed.
+      // server.js /api/jobs will use the fileUrl we pass via a special field.
+      formData.append('composedFileUrl', fileUrl);
+      formData.append('composedFileName', fileName);
+    } else {
+      var fileInput = document.getElementById('fileInput');
+      if(fileInput.files && fileInput.files[0]) formData.append('file', fileInput.files[0]);
+    }
+
+    var res = await fetch(BACKEND_URL+'/api/jobs', {method:'POST', body:formData});
+    var data = await res.json();
+    if(!data.success) throw new Error(data.error||'Failed');
+
+    document.getElementById('tokenNum').textContent = data.token;
+    document.getElementById('tokenEta').textContent = eta;
+    document.getElementById('tokenCard').classList.add('show');
+    document.getElementById('tokenCard').scrollIntoView({behavior:'smooth'});
+  } catch(err) {
+    document.getElementById('composeBanner').style.display = 'none';
+    alert('Error: '+err.message);
+    btn.disabled = false; btn.textContent = 'Submit Print Job →';
+  }
+}
+
+document.getElementById('studentName').addEventListener('input', checkSubmit);
+document.getElementById('copies').addEventListener('input', updatePrice);
+
+// Drag and drop
+var uz = document.getElementById('uploadZone');
+uz.addEventListener('dragover', function(e){ e.preventDefault(); uz.classList.add('drag'); });
+uz.addEventListener('dragleave', function(){ uz.classList.remove('drag'); });
+uz.addEventListener('drop', function(e){
+  e.preventDefault(); uz.classList.remove('drag');
+  if(e.dataTransfer.files.length) handleFile({files:e.dataTransfer.files});
+});
+
+// Reset composedPDF cache if imagesPerSheet chip changes
+// (already handled in selectChip above)
+</script>
+</body>
+</html>
