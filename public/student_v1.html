@@ -1034,3 +1034,916 @@ uz.addEventListener('drop', function(e){
 </script>
 </body>
 </html>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Smart Print — Submit Job</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#f0f4f0;--surface:#ffffff;--surface2:#f8faf8;
+  --border:#e0e8e0;--text:#1a2a1a;--muted:#6a8a6a;
+  --green:#1a7a3a;--green-light:#e8f5ec;--green-mid:#4caf70;
+  --green-btn:#22a34a;--green-btn-h:#1a8a3a;
+  --radius:16px;--radius-sm:10px;--radius-xs:8px;
+}
+body{background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;min-height:100vh;padding-bottom:40px;}
+
+/* ── Header ── */
+header{background:var(--green);padding:20px 20px 28px;position:relative;overflow:hidden;}
+header::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,0.08);}
+header::after{content:'';position:absolute;bottom:-20px;left:30px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.06);}
+.header-inner{position:relative;z-index:1;}
+.logo{font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.03em;}
+.logo span{opacity:0.7;}
+.header-sub{font-size:13px;color:rgba(255,255,255,0.7);margin-top:4px;}
+
+/* ── Main ── */
+main{padding:20px 16px;max-width:480px;margin:0 auto;}
+
+/* ── Section label ── */
+.section-label{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;padding-left:2px;}
+
+/* ── Card ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,0.04);}
+
+/* ── Upload zone ── */
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius-sm);padding:32px 20px;text-align:center;cursor:pointer;transition:all 0.2s;position:relative;background:var(--surface2);}
+.upload-zone.drag,.upload-zone:active{border-color:var(--green-mid);background:var(--green-light);}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-icon{font-size:32px;margin-bottom:8px;}
+.upload-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.upload-sub{font-size:12px;color:var(--muted);}
+
+/* ── File preview ── */
+.file-preview{display:none;background:var(--green-light);border:1px solid #b8dfc4;border-radius:var(--radius-sm);padding:12px 14px;margin-top:10px;align-items:center;gap:10px;}
+.file-preview.show{display:flex;}
+.file-icon{font-size:24px;}
+.file-info{flex:1;}
+.file-name{font-size:13px;font-weight:600;color:var(--green);}
+.file-meta{font-size:11px;color:var(--muted);margin-top:1px;}
+.file-remove{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:4px;line-height:1;}
+
+/* ── Fields ── */
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;letter-spacing:0.02em;}
+.field input,.field select{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-xs);padding:12px 14px;color:var(--text);font-family:'Sora',sans-serif;font-size:14px;outline:none;transition:border-color 0.2s;-webkit-appearance:none;}
+.field input:focus,.field select:focus{border-color:var(--green-mid);}
+
+/* ── Chips ── */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;}
+.chip{padding:8px 14px;border-radius:100px;font-size:13px;font-weight:500;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;transition:all 0.15s;font-family:'Sora',sans-serif;}
+.chip.active{background:var(--green-light);border-color:var(--green-mid);color:var(--green);}
+
+/* ── Toggles ── */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+.toggle-row:last-child{border-bottom:none;}
+.toggle-label{font-size:14px;font-weight:500;}
+.toggle-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+.toggle{width:44px;height:26px;background:var(--border);border-radius:100px;position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;border:none;outline:none;}
+.toggle.on{background:var(--green-mid);}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);}
+.toggle.on::after{transform:translateX(18px);}
+
+/* ── Images per sheet (hidden by default) ── */
+.img-config{display:none;}
+.img-config.show{display:block;}
+
+/* ── Mixed colour pages ── */
+.mixed-config{display:none;margin-top:12px;}
+.mixed-config.show{display:block;}
+.mixed-config input{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-xs);padding:10px 14px;color:var(--text);font-family:'Sora',sans-serif;font-size:13px;outline:none;}
+.mixed-config input:focus{border-color:var(--green-mid);}
+.mixed-hint{font-size:11px;color:var(--muted);margin-top:6px;}
+.mixed-summary{font-size:12px;color:var(--green);margin-top:6px;font-weight:500;}
+
+/* ── Price box ── */
+.price-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-top:6px;}
+.price-row{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;color:var(--muted);}
+.price-row .val{font-family:'JetBrains Mono',monospace;font-weight:500;color:var(--text);}
+.price-total{border-top:1px solid var(--border);margin-top:8px;padding-top:10px;}
+.price-total .label{font-weight:600;color:var(--text);font-size:14px;}
+.price-total .val{color:var(--green);font-size:16px;font-weight:700;}
+
+/* ── Submit ── */
+.btn-submit{width:100%;padding:16px;background:var(--green-btn);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'Sora',sans-serif;font-size:16px;font-weight:700;cursor:pointer;margin-top:16px;transition:all 0.2s;letter-spacing:0.01em;}
+.btn-submit:hover{background:var(--green-btn-h);}
+.btn-submit:active{transform:scale(0.98);}
+.btn-submit:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+
+/* ── Token card ── */
+.token-card{display:none;background:var(--green);border-radius:var(--radius);padding:28px 20px;text-align:center;margin-top:16px;position:relative;overflow:hidden;}
+.token-card::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.1);}
+.token-card.show{display:block;animation:fadeUp 0.4s ease both;}
+.token-label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.2em;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-bottom:8px;}
+.token-num{font-size:80px;font-weight:800;color:#fff;line-height:1;letter-spacing:-0.04em;}
+.token-eta{font-size:14px;color:rgba(255,255,255,0.8);margin-top:12px;}
+.token-eta strong{color:#fff;}
+.token-note{font-size:12px;color:rgba(255,255,255,0.6);margin-top:8px;}
+
+/* ── Queue status ── */
+.queue-status{display:flex;gap:10px;}
+.q-stat{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center;}
+.q-num{font-size:26px;font-weight:700;letter-spacing:-0.03em;}
+.q-lbl{font-size:11px;color:var(--muted);margin-top:2px;}
+.q-num.green{color:var(--green);}
+.q-num.orange{color:#e67700;}
+.q-num.blue{color:#1971c2;}
+
+/* ── AI Feature Styles ── */
+.ai-btn{width:100%;padding:11px 14px;border:1.5px solid var(--green-mid);background:var(--green-light);color:var(--green);border-radius:var(--radius-xs);font-family:'Sora',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-top:10px;transition:all 0.2s;text-align:left;}
+.ai-btn:hover{background:#d4edda;}
+.ai-btn:disabled{opacity:0.5;cursor:not-allowed;}
+.ai-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;margin-top:10px;}
+.ai-card h3{margin:0 0 10px;font-size:14px;color:#1e293b;}
+.ai-card h4{margin:8px 0 4px;font-size:12px;color:#475569;}
+.ai-table{width:100%;border-collapse:collapse;font-size:12px;}
+.ai-table td{padding:5px 6px;border-bottom:1px solid #e2e8f0;}
+.ai-table .reason{color:#64748b;font-size:11px;}
+.doc-type{font-size:12px;color:#334155;margin-bottom:8px;}
+.cost-tip{background:#f0fdf4;border-left:3px solid #22c55e;padding:7px 10px;font-size:12px;color:#166534;margin-top:8px;border-radius:4px;}
+.ai-warning-box{background:#fff7ed;border-left:3px solid #f97316;padding:7px 10px;font-size:12px;color:#9a3412;margin-top:6px;border-radius:4px;}
+.applied-note{font-size:11px;color:#64748b;margin-top:6px;font-style:italic;}
+.ocr-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;margin-bottom:6px;}
+.ocr-text{width:100%;height:100px;font-size:11px;font-family:monospace;resize:vertical;border:1px solid #cbd5e1;border-radius:6px;padding:7px;margin-top:4px;}
+.score-badge{font-size:14px;margin:2px 0 8px;}
+.nlp-row{display:flex;gap:8px;margin-top:6px;}
+.nlp-row input{flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-xs);font-family:'Sora',sans-serif;font-size:13px;color:var(--text);background:var(--surface2);outline:none;}
+.nlp-row input:focus{border-color:var(--green-mid);}
+.nlp-row button{padding:10px 14px;background:var(--green-btn);color:#fff;border:none;border-radius:var(--radius-xs);font-family:'Sora',sans-serif;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;}
+.nlp-row button:disabled{opacity:0.5;cursor:not-allowed;}
+.understood{font-size:12px;color:#166534;margin-bottom:6px;}
+.nlp-tags{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0;}
+.nlp-tag{background:#dbeafe;color:#1d4ed8;padding:3px 10px;border-radius:20px;font-size:12px;}
+.missing-note{font-size:11px;color:#92400e;background:#fef3c7;padding:5px 8px;border-radius:4px;margin-top:4px;}
+.ai-divider{border:none;border-top:1px dashed var(--border);margin:14px 0;}
+.sp-toast{position:fixed;bottom:24px;right:16px;background:#1e293b;color:#fff;padding:11px 16px;border-radius:10px;font-size:13px;opacity:0;transform:translateY(8px);transition:all 0.25s;z-index:9999;max-width:300px;}
+.sp-toast.show{opacity:1;transform:translateY(0);}
+.sp-toast.error{background:#dc2626;}
+.sp-toast.warn{background:#d97706;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+/* ── Environmental Sustainability card ── */
+.eco-card{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;}
+.eco-header{display:flex;align-items:center;gap:9px;margin-bottom:14px;}
+.eco-icon{width:34px;height:34px;background:#dcfce7;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+.eco-title{font-size:14px;font-weight:700;color:#15803d;}
+.eco-sub{font-size:11px;color:#4ade80;margin-top:1px;}
+.eco-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+.eco-stat{background:#fff;border:1px solid #bbf7d0;border-radius:var(--radius-xs);padding:12px 10px;text-align:center;}
+.eco-stat-num{font-size:20px;font-weight:800;color:#15803d;letter-spacing:-0.02em;line-height:1;}
+.eco-stat-unit{font-size:10px;color:#4ade80;font-weight:600;margin-top:1px;}
+.eco-stat-label{font-size:10px;color:#86efac;margin-top:3px;text-transform:uppercase;letter-spacing:0.04em;}
+.eco-score-bar{height:6px;background:#bbf7d0;border-radius:100px;margin:10px 0 6px;overflow:hidden;}
+.eco-score-fill{height:100%;border-radius:100px;background:linear-gradient(90deg,#4ade80,#16a34a);transition:width 0.5s ease;}
+.eco-score-label{display:flex;justify-content:space-between;font-size:10px;color:#4ade80;font-weight:600;}
+.eco-tip{display:flex;align-items:flex-start;gap:9px;background:#dcfce7;border-radius:var(--radius-xs);padding:10px 12px;font-size:12px;color:#166534;line-height:1.5;margin-top:10px;}
+.eco-tip-icon{font-size:15px;flex-shrink:0;margin-top:1px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">Smart<span>Print</span></div>
+    <div class="header-sub">Submit your print job from anywhere</div>
+  </div>
+</header>
+
+<main>
+
+  <!-- Queue Status -->
+  <div class="section-label">Live queue</div>
+  <div class="queue-status" style="margin-bottom:20px;">
+    <div class="q-stat">
+      <div class="q-num orange" id="qJobs">—</div>
+      <div class="q-lbl">Jobs ahead</div>
+    </div>
+    <div class="q-stat">
+      <div class="q-num blue" id="qWait">—</div>
+      <div class="q-lbl">Est. wait</div>
+    </div>
+    <div class="q-stat">
+      <div class="q-num green">✓</div>
+      <div class="q-lbl">Printer online</div>
+    </div>
+  </div>
+
+  <!-- ── FEATURE 5: Natural Language Request ── -->
+  <div class="section-label">Quick request</div>
+  <div class="card">
+    <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;">💬 Just describe what you need</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">e.g. "2 copies black and white double sided urgent"</div>
+    <div class="nlp-row">
+      <input type="text" id="nlpInput" placeholder='Type your print request here…'>
+      <button id="btnNlp" onclick="parseNLRequest()">⚙️ Apply</button>
+    </div>
+    <div id="nlpResult"></div>
+  </div>
+
+  <!-- Document -->
+  <div class="section-label">Your document</div>
+  <div class="card">
+    <div class="upload-zone" id="uploadZone">
+      <div class="upload-icon">📄</div>
+      <div class="upload-title">Tap to upload file</div>
+      <div class="upload-sub">PDF, Word, JPG, PNG · Max 20MB</div>
+      <input type="file" id="fileInput" accept=".pdf,.docx,.doc,.jpg,.jpeg,.png" onchange="handleFile(this)">
+    </div>
+    <div class="file-preview" id="filePreview">
+      <div class="file-icon" id="fileIcon">📄</div>
+      <div class="file-info">
+        <div class="file-name" id="fileName">document.pdf</div>
+        <div class="file-meta" id="fileMeta">PDF · 12 pages</div>
+      </div>
+      <button class="file-remove" onclick="removeFile()">×</button>
+    </div>
+
+    <!-- ── FEATURE 1: AI Print Assistant ── -->
+    <button class="ai-btn" id="btnAI" onclick="runAIAssistant()">🤖 Get AI Print Recommendation</button>
+    <div id="aiResult"></div>
+
+    <!-- ── FEATURE 2: OCR ── -->
+    <button class="ai-btn" id="btnOCR" onclick="runOCR()" style="display:none;">🔍 Extract Text (OCR)</button>
+    <div id="ocrResult"></div>
+  </div>
+
+  <!-- Your details -->
+  <div class="section-label">Your details</div>
+  <div class="card">
+    <div class="field">
+      <label>Name</label>
+      <input type="text" id="studentName" placeholder="e.g. Loan Lelo" oninput="checkSubmit()">
+    </div>
+    <div class="field" style="margin-bottom:0">
+      <label>WhatsApp Number</label>
+      <input type="tel" id="whatsappNum" placeholder="+91 6397 013586">
+    </div>
+  </div>
+
+  <!-- Print config -->
+  <div class="section-label">Print settings</div>
+  <div class="card">
+
+    <!-- Colour mode (PDF/doc) -->
+    <div id="colorSection">
+      <div class="field">
+        <label>Colour Mode</label>
+        <div class="chips" id="colorChips">
+          <div class="chip active" onclick="selectChip('colorChips',this,'bw')">⬛ All B&W</div>
+          <div class="chip" onclick="selectChip('colorChips',this,'color')">🌈 All Colour</div>
+          <div class="chip" onclick="selectChip('colorChips',this,'mixed')">🎨 Mixed</div>
+        </div>
+        <div class="mixed-config" id="mixedConfig">
+          <input type="text" id="colorPages" placeholder="e.g. 1, 5-10, 15" oninput="updateMixedSummary()">
+          <div class="mixed-hint">Enter page numbers that should be printed in colour. Rest will be B&W.</div>
+          <div class="mixed-summary" id="mixedSummary"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Images per sheet (images only) -->
+    <div class="img-config" id="imgConfig">
+      <div class="field">
+        <label>Images per Sheet</label>
+        <div class="chips" id="ipsChips">
+          <div class="chip active" onclick="selectChip('ipsChips',this,'1')">1</div>
+          <div class="chip" onclick="selectChip('ipsChips',this,'2')">2</div>
+          <div class="chip" onclick="selectChip('ipsChips',this,'4')">4</div>
+          <div class="chip" onclick="selectChip('ipsChips',this,'6')">6</div>
+          <div class="chip" onclick="selectChip('ipsChips',this,'9')">9</div>
+          <div class="chip" onclick="selectChip('ipsChips',this,'12')">12</div>
+        </div>
+        <div style="margin-top:8px;" id="imgSheetNote"></div>
+      </div>
+      <div class="field">
+        <label>Image Colour</label>
+        <div class="chips" id="imgColorChips">
+          <div class="chip active" onclick="selectChip('imgColorChips',this,'bw')">⬛ B&W</div>
+          <div class="chip" onclick="selectChip('imgColorChips',this,'color')">🌈 Colour</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Sides</label>
+      <div class="chips" id="sideChips">
+        <div class="chip active" onclick="selectChip('sideChips',this,'single')">Single sided</div>
+        <div class="chip" onclick="selectChip('sideChips',this,'double')">Double sided</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Number of Copies</label>
+      <input type="number" id="copies" value="1" min="1" max="50" oninput="updatePrice()">
+    </div>
+
+    <div class="field">
+      <label>Paper Size</label>
+      <select id="paperSize">
+        <option>A4 (default)</option>
+        <option>A3</option>
+        <option>Letter</option>
+      </select>
+    </div>
+
+    <div class="field" id="pageRangeField" style="margin-bottom:0">
+      <label>Page Range <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+      <input type="text" id="pageRange" placeholder="e.g. 1-5, 8, 11-13 · blank = all pages">
+    </div>
+
+    <div style="margin-top:14px;">
+      <div class="toggle-row">
+        <div><div class="toggle-label">Staple pages</div><div class="toggle-sub">Staple all sheets together</div></div>
+        <button class="toggle" id="toggleStaple" onclick="this.classList.toggle('on')"></button>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">⚡ Urgent print</div><div class="toggle-sub">Move to front of queue (+₹5)</div></div>
+        <button class="toggle" id="toggleUrgent" onclick="this.classList.toggle('on');updatePrice()"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FEATURE 3: AI Print Preview Check ── -->
+  <div class="section-label">Preview check</div>
+  <div class="card">
+    <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">Detect issues before submitting — cropped content, low resolution, B&W compatibility.</div>
+    <button class="ai-btn" id="btnPreview" onclick="runPreviewCheck()">🖼 Check Print Preview</button>
+    <div id="previewResult"></div>
+  </div>
+
+  <!-- Price -->
+  <div class="section-label">Price estimate</div>
+  <div class="card">
+    <div class="price-box">
+      <div class="price-row"><span>Pages / Sheets</span><span class="val" id="prPages">—</span></div>
+      <div class="price-row"><span>Mode</span><span class="val" id="prMode">B&W (₹2/pg)</span></div>
+      <div class="price-row"><span>Copies</span><span class="val" id="prCopies">1</span></div>
+      <div class="price-row"><span>Print cost</span><span class="val" id="prCost">—</span></div>
+      <div class="price-row"><span>Urgent fee</span><span class="val" id="prUrgent">—</span></div>
+      <div class="price-row price-total"><span class="label">Total</span><span class="val" id="prTotal">—</span></div>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="toggle-row">
+        <div><div class="toggle-label">Pay via UPI now</div><div class="toggle-sub">Skip payment at shop</div></div>
+        <button class="toggle" id="togglePay" onclick="this.classList.toggle('on')"></button>
+      </div>
+    </div>
+    <button class="btn-submit" id="submitBtn" onclick="submitJob()" disabled>Submit Print Job →</button>
+  </div>
+
+  <!-- ── Environmental Sustainability ── -->
+  <div class="section-label">🌿 Eco impact</div>
+  <div class="eco-card" id="ecoCard" style="display:none;">
+    <div class="eco-header">
+      <div class="eco-icon">🌱</div>
+      <div>
+        <div class="eco-title">Your Print's Environmental Impact</div>
+        <div class="eco-sub">Based on your current settings</div>
+      </div>
+    </div>
+    <div class="eco-stats">
+      <div class="eco-stat">
+        <div class="eco-stat-num" id="ecoSheets">—</div>
+        <div class="eco-stat-unit">sheets</div>
+        <div class="eco-stat-label">Paper used</div>
+      </div>
+      <div class="eco-stat">
+        <div class="eco-stat-num" id="ecoGrams">—</div>
+        <div class="eco-stat-unit">grams</div>
+        <div class="eco-stat-label">Paper weight</div>
+      </div>
+      <div class="eco-stat">
+        <div class="eco-stat-num" id="ecoCO2">—</div>
+        <div class="eco-stat-unit">grams CO₂</div>
+        <div class="eco-stat-label">Carbon cost</div>
+      </div>
+    </div>
+    <div class="eco-score-bar"><div class="eco-score-fill" id="ecoScoreFill" style="width:0%"></div></div>
+    <div class="eco-score-label">
+      <span>More impact</span>
+      <span id="ecoScoreLabel">Eco Score: —</span>
+      <span>Less impact</span>
+    </div>
+    <div class="eco-tip">
+      <span class="eco-tip-icon">💡</span>
+      <span id="ecoTipText">Upload a file and configure settings to see your eco impact.</span>
+    </div>
+  </div>
+
+  <!-- Token -->
+  <div class="token-card" id="tokenCard">
+    <div class="token-label">Your token number</div>
+    <div class="token-num" id="tokenNum">—</div>
+    <div class="token-eta">Come in approx. <strong id="tokenEta">8–12 min</strong></div>
+    <div class="token-note">You'll get a WhatsApp alert when ready 📱</div>
+  </div>
+
+</main>
+
+<div class="sp-toast" id="spToast"></div>
+
+<script>
+const BACKEND_URL =
+    window.location.hostname === "localhost"
+        ? "http://localhost:3000"
+        : "https://smart-print-production.up.railway.app";
+var cfg = {type:'doc',color:'bw',sides:'single',pages:0,copies:1,imgPerSheet:1,imgColor:'bw',colorRanges:[]};
+
+// ── Toast ──
+function toast(msg, type) {
+  var el = document.getElementById('spToast');
+  el.textContent = msg;
+  el.className = 'sp-toast show' + (type ? ' ' + type : '');
+  clearTimeout(el._t);
+  el._t = setTimeout(function(){ el.classList.remove('show'); }, 3500);
+}
+
+// ── Load queue count ──
+fetch(BACKEND_URL+'/api/jobs').then(function(r){return r.json();}).then(function(jobs){
+  var pending = jobs.length;
+  document.getElementById('qJobs').textContent = pending;
+  document.getElementById('qWait').textContent = '~'+(pending*2+2)+' min';
+}).catch(function(){
+  document.getElementById('qJobs').textContent = '0';
+  document.getElementById('qWait').textContent = '~2 min';
+});
+
+// ── File handling ──
+function handleFile(input){
+  if(!input.files||!input.files[0])return;
+  var file = input.files[0];
+  var ext = file.name.split('.').pop().toLowerCase();
+  var isImg = (ext==='jpg'||ext==='jpeg'||ext==='png');
+  cfg.type = isImg ? 'img' : 'doc';
+  var icons = {pdf:'📄',doc:'📝',docx:'📝',jpg:'🖼️',jpeg:'🖼️',png:'🖼️'};
+  cfg.pages = isImg ? 1 : 0;
+  if (!isImg) {
+
+    const fd = new FormData();
+
+    fd.append("file", file);
+
+    fetch(BACKEND_URL + "/api/page-count", {
+
+        method: "POST",
+
+        body: fd
+
+    })
+    .then(r => r.json())
+
+    .then(data => {
+
+        if (!data.success) return;
+
+        cfg.pages = data.pages;
+
+        document.getElementById("fileMeta").textContent =
+            ext.toUpperCase() +
+            " · " +
+            data.pages +
+            " pages · " +
+            (file.size / 1048576).toFixed(1) +
+            " MB";
+
+        updatePrice();
+
+        checkSubmit();
+
+    })
+
+    .catch(console.error);
+
+}
+  if(isImg) cfg.imgCount = 1;
+
+  document.getElementById('fileIcon').textContent = icons[ext]||'📄';
+  document.getElementById('fileName').textContent = file.name;
+  if (isImg) {
+
+    document.getElementById("fileMeta").textContent =
+        ext.toUpperCase() +
+        " · 1 image · " +
+        (file.size / 1048576).toFixed(1) +
+        " MB";
+
+}
+else {
+
+    document.getElementById("fileMeta").textContent =
+        ext.toUpperCase() +
+        " · Detecting pages... · " +
+        (file.size / 1048576).toFixed(1) +
+        " MB";
+
+}
+  document.getElementById('uploadZone').style.display = 'none';
+  document.getElementById('filePreview').classList.add('show');
+
+  document.getElementById('colorSection').style.display = isImg ? 'none' : 'block';
+  document.getElementById('imgConfig').style.display = isImg ? 'block' : 'none';
+  document.getElementById('imgConfig').classList.toggle('show', isImg);
+  document.getElementById('pageRangeField').style.display = isImg ? 'none' : 'block';
+
+  // Show OCR button only for images
+  document.getElementById('btnOCR').style.display = isImg ? 'block' : 'none';
+
+  updatePrice(); checkSubmit();
+}
+
+function removeFile(){
+  cfg.pages = 0; cfg.type = 'doc';
+  document.getElementById('uploadZone').style.display = '';
+  document.getElementById('filePreview').classList.remove('show');
+  document.getElementById('fileInput').value = '';
+  document.getElementById('colorSection').style.display = 'block';
+  document.getElementById('imgConfig').classList.remove('show');
+  document.getElementById('pageRangeField').style.display = 'block';
+  document.getElementById('btnOCR').style.display = 'none';
+  document.getElementById('aiResult').innerHTML = '';
+  document.getElementById('ocrResult').innerHTML = '';
+  document.getElementById('previewResult').innerHTML = '';
+  updatePrice(); checkSubmit();
+}
+
+function selectChip(gid, el, val){
+  document.querySelectorAll('#'+gid+' .chip').forEach(function(c){c.classList.remove('active');});
+  el.classList.add('active');
+  if(gid==='colorChips'){ cfg.color=val; document.getElementById('mixedConfig').classList.toggle('show',val==='mixed'); }
+  if(gid==='sideChips') cfg.sides = val;
+  if(gid==='ipsChips'){ cfg.imgPerSheet=parseInt(val); updateImgNote(); }
+  if(gid==='imgColorChips') cfg.imgColor = val;
+  updatePrice();
+}
+
+function updateImgNote(){
+  var note = document.getElementById('imgSheetNote');
+  if(cfg.pages>0){
+    var sheets = Math.ceil(cfg.pages/cfg.imgPerSheet);
+    note.innerHTML = '<span style="font-size:12px;color:var(--muted)">'+cfg.pages+' image'+(cfg.pages>1?'s':'')+' ÷ '+cfg.imgPerSheet+'/sheet = '+sheets+' sheet'+(sheets>1?'s':'')+'</span>';
+  }
+}
+
+function updateMixedSummary(){
+  var val = document.getElementById('colorPages').value.trim();
+  var summary = document.getElementById('mixedSummary');
+  if(!val){ summary.textContent=''; return; }
+  var colourPages = parsePageRanges(val);
+  var bwPages = Math.max(0,(cfg.pages||10)-colourPages.length);
+  summary.textContent = '🌈 ~'+colourPages.length+' colour pages + ⬛ ~'+bwPages+' B&W pages';
+  cfg.colorRanges = [val];
+}
+
+function parsePageRanges(str){
+  var pages = [];
+  str.split(',').forEach(function(part){
+    part = part.trim();
+    if(part.includes('-')){ var r=part.split('-'); for(var i=parseInt(r[0]);i<=parseInt(r[1]);i++) pages.push(i); }
+    else if(parseInt(part)) pages.push(parseInt(part));
+  });
+  return pages;
+}
+
+function updatePrice(){
+  var copies = parseInt(document.getElementById('copies').value)||1;
+  cfg.copies = copies;
+  var urgent = document.getElementById('toggleUrgent').classList.contains('on');
+  var pages = cfg.pages||0;
+  var sheets, cost;
+
+  if(cfg.type==='img'){
+    sheets = Math.ceil(pages/cfg.imgPerSheet);
+    var rate = cfg.imgColor==='color' ? 5 : 2;
+    cost = sheets*copies*rate;
+    document.getElementById('prMode').textContent = cfg.imgColor==='color'?'Colour (₹5/pg)':'B&W (₹2/pg)';
+    document.getElementById('prPages').textContent = pages ? sheets+' sheet'+(sheets>1?'s':'') : '—';
+  } else {
+    sheets = pages;
+    var colourPgs = cfg.color==='mixed' ? parsePageRanges(document.getElementById('colorPages').value||'').length : 0;
+    var bwPgs = cfg.color==='mixed' ? (pages-colourPgs) : pages;
+    var colCost = cfg.color==='color'?pages*5:cfg.color==='mixed'?colourPgs*5:0;
+    var bwCost = cfg.color==='bw'?pages*2:cfg.color==='mixed'?bwPgs*2:0;
+    cost = (colCost+bwCost)*copies;
+    if(cfg.color==='bw') document.getElementById('prMode').textContent='All B&W (₹2/pg)';
+    else if(cfg.color==='color') document.getElementById('prMode').textContent='All Colour (₹5/pg)';
+    else document.getElementById('prMode').textContent='Mixed colour';
+    document.getElementById('prPages').textContent = pages ? pages+' pages' : '—';
+  }
+
+  var urgentFee = urgent ? 5 : 0;
+  var total = pages ? cost+urgentFee : 0;
+  document.getElementById('prCopies').textContent = copies;
+  document.getElementById('prCost').textContent = pages ? '₹'+cost : '—';
+  document.getElementById('prUrgent').textContent = urgentFee ? '₹5' : '—';
+  document.getElementById('prTotal').textContent = pages ? '₹'+total : '—';
+  updateEco(pages, copies);
+  checkSubmit();
+}
+
+// ── Environmental Sustainability Calculator ──
+function updateEco(pages, copies) {
+  var ecoCard = document.getElementById('ecoCard');
+  if (!pages || pages === 0) { ecoCard.style.display = 'none'; return; }
+  ecoCard.style.display = 'block';
+
+  var sides = cfg.sides;
+  var color = cfg.type === 'img' ? cfg.imgColor : cfg.color;
+
+  // A4 sheet ~5g. Duplex halves sheet count.
+  var sheetsUsed = sides === 'double'
+    ? Math.ceil(pages / 2) * copies
+    : pages * copies;
+  var gramsOfPaper = sheetsUsed * 5;
+
+  // CO2: ~10g per sheet B&W, ~14g colour (ink + energy)
+  var co2PerSheet = color === 'color' ? 14 : 10;
+  var co2 = Math.round(sheetsUsed * co2PerSheet);
+
+  // Eco score 0–100
+  var worstCase = 50 * 14;
+  var score = Math.max(0, Math.min(100, Math.round((1 - (co2 / worstCase)) * 100)));
+
+  // Contextual tip — explains WHY score is high or low
+  var tip = '';
+  if (sides === 'double' && color === 'bw') {
+    tip = 'Score is high because you chose duplex + B&W — the most eco-friendly combination. You are saving ' + Math.ceil(pages * copies / 2) + ' sheets and using minimal ink. 🌿';
+  } else if (sides === 'double' && color === 'color') {
+    tip = 'Score is good because duplex halved your paper use, saving ' + Math.ceil(pages * copies / 2) + ' sheets. Switch to B&W to save an extra ₹' + (pages * copies * 3) + ' and cut CO₂ further.';
+  } else if (sides === 'single' && color === 'bw') {
+    var sv = Math.ceil(pages * copies / 2);
+    tip = 'Score could be higher. B&W is great, but single-sided is using ' + (pages * copies) + ' sheets. Switch to duplex to save ' + sv + ' sheet' + (sv > 1 ? 's' : '') + ' and cut CO₂ by ~' + Math.round(sv * 10) + 'g.';
+  } else if (sides === 'single' && color === 'color') {
+    var sv2 = Math.ceil(pages * copies / 2);
+    tip = 'Score is low — single-sided colour printing uses the most paper and ink. Enable duplex (saves ' + sv2 + ' sheets) and switch to B&W (saves ₹' + (pages * copies * 3) + ') to nearly double your score.';
+  } else {
+    tip = sides === 'single' && pages > 2
+      ? 'Consider enabling duplex to save ' + Math.ceil(pages * copies / 2) + ' sheets of paper.'
+      : 'Mixed colour — print only the pages that truly need colour to reduce impact.';
+  }
+  if (copies > 3) {
+    tip += ' Also: ' + copies + ' copies = ' + sheetsUsed + ' sheets total — double-check all are needed.';
+  }
+
+  var scoreLabel = score >= 75 ? '🌿 Excellent' : score >= 50 ? '🟡 Moderate' : score >= 25 ? '🟠 High impact' : '🔴 Very high impact';
+
+  document.getElementById('ecoSheets').textContent = sheetsUsed;
+  document.getElementById('ecoGrams').textContent = gramsOfPaper;
+  document.getElementById('ecoCO2').textContent = co2;
+  document.getElementById('ecoScoreFill').style.width = score + '%';
+  document.getElementById('ecoScoreLabel').textContent = 'Eco Score: ' + score + '/100 ' + scoreLabel;
+  document.getElementById('ecoTipText').textContent = tip;
+}
+
+function checkSubmit(){
+  var name = document.getElementById('studentName').value.trim();
+  document.getElementById('submitBtn').disabled = !(name && cfg.pages > 0);
+}
+
+// ────────────────────────────────────────────────
+// FEATURE 1: AI Print Assistant
+// ────────────────────────────────────────────────
+async function runAIAssistant(){
+  var fileInput = document.getElementById('fileInput');
+  if(!fileInput.files||!fileInput.files[0]){ toast('Upload a file first','warn'); return; }
+  var btn = document.getElementById('btnAI');
+  btn.disabled = true; btn.textContent = '🤖 Analysing…';
+
+  try {
+    var fd = new FormData();
+    fd.append('file', fileInput.files[0]);
+    var res = await fetch(BACKEND_URL+'/api/ai/analyze', {method:'POST', body:fd});
+    var data = await res.json();
+    if (!data.success) {
+    throw new Error(data.error || "Unknown AI error");
+     }
+    var r = data.recommendation;
+
+    // Auto-apply settings
+    var colorMap = {bw:'bw', color:'color'};
+    if(colorMap[r.colorMode]){
+      document.querySelectorAll('#colorChips .chip').forEach(function(c){ c.classList.remove('active'); });
+      document.querySelectorAll('#colorChips .chip').forEach(function(c){
+        if(c.getAttribute('onclick') && c.getAttribute('onclick').includes("'"+r.colorMode+"'")) c.classList.add('active');
+      });
+      cfg.color = r.colorMode;
+    }
+    if(r.sides){
+      document.querySelectorAll('#sideChips .chip').forEach(function(c){ c.classList.remove('active'); });
+      document.querySelectorAll('#sideChips .chip').forEach(function(c){
+        if(c.getAttribute('onclick') && c.getAttribute('onclick').includes("'"+r.sides+"'")) c.classList.add('active');
+      });
+      cfg.sides = r.sides;
+    }
+    if(r.copies) document.getElementById('copies').value = r.copies;
+    updatePrice();
+
+    document.getElementById('aiResult').innerHTML =
+      '<div class="ai-card">' +
+        '<h3>🤖 AI Recommendation</h3>' +
+        '<p class="doc-type">Detected: <strong>'+r.documentType+'</strong></p>' +
+        '<table class="ai-table">' +
+          '<tr><td>Colour Mode</td><td><strong>'+r.colorMode.toUpperCase()+'</strong></td><td class="reason">'+r.reasoning.colorMode+'</td></tr>' +
+          '<tr><td>Orientation</td><td><strong>'+r.orientation+'</strong></td><td class="reason">'+r.reasoning.orientation+'</td></tr>' +
+          '<tr><td>Sides</td><td><strong>'+r.sides+'-sided</strong></td><td class="reason">'+r.reasoning.sides+'</td></tr>' +
+        '</table>' +
+        (r.costTip ? '<p class="cost-tip">💡 '+r.costTip+'</p>' : '') +
+        (r.warning ? '<p class="ai-warning-box">⚠️ '+r.warning+'</p>' : '') +
+        '<p class="applied-note">Settings applied to form. You can still change them.</p>' +
+      '</div>';
+  } catch(e) {
+    toast('AI analysis failed: '+e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '🤖 Get AI Print Recommendation';
+  }
+}
+
+// ────────────────────────────────────────────────
+// FEATURE 2: OCR
+// ────────────────────────────────────────────────
+async function runOCR(){
+  var fileInput = document.getElementById('fileInput');
+  if(!fileInput.files||!fileInput.files[0]){ toast('Upload an image first','warn'); return; }
+  var btn = document.getElementById('btnOCR');
+  btn.disabled = true; btn.textContent = '🔍 Extracting…';
+
+  try {
+    var fd = new FormData();
+    fd.append('file', fileInput.files[0]);
+    var res = await fetch(BACKEND_URL+'/api/ai/ocr', {method:'POST', body:fd});
+    var data = await res.json();
+    if(!data.success) throw new Error(data.error);
+
+    var issueHtml = data.qualityIssues && data.qualityIssues.length
+      ? data.qualityIssues.map(function(i){ return '<li>⚠️ '+i+'</li>'; }).join('')
+      : '<li>✅ No quality issues</li>';
+
+    document.getElementById('ocrResult').innerHTML =
+      '<div class="ai-card">' +
+        '<h3>🔍 OCR Result</h3>' +
+        '<div class="ocr-meta">' +
+          '<span>Orientation: <strong>'+(data.detectedOrientation||'—')+'</strong></span>' +
+          '<span>Confidence: <strong>'+(data.confidence||'—')+'</strong></span>' +
+          '<span>Print Ready: <strong>'+(data.printReady?'✅':'❌')+'</strong></span>' +
+        '</div>' +
+        '<h4>Extracted Text:</h4>' +
+        '<textarea class="ocr-text" readonly>'+(data.extractedText||'(No text found)')+'</textarea>' +
+        '<h4>Quality:</h4><ul style="font-size:12px;padding-left:16px;">'+issueHtml+'</ul>' +
+        (data.suggestedFixes&&data.suggestedFixes.length ? '<h4>Tips:</h4><ul style="font-size:12px;padding-left:16px;">'+data.suggestedFixes.map(function(f){ return '<li>💡 '+f+'</li>'; }).join('')+'</ul>' : '') +
+      '</div>';
+  } catch(e) {
+    toast('OCR failed: '+e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '🔍 Extract Text (OCR)';
+  }
+}
+
+// ────────────────────────────────────────────────
+// FEATURE 3: AI Print Preview Check
+// ────────────────────────────────────────────────
+async function runPreviewCheck(){
+  var fileInput = document.getElementById('fileInput');
+  if(!fileInput.files||!fileInput.files[0]){ toast('Upload a file first','warn'); return; }
+  var btn = document.getElementById('btnPreview');
+  btn.disabled = true; btn.textContent = '🖼 Checking…';
+
+  try {
+    var fd = new FormData();
+    fd.append('file', fileInput.files[0]);
+    fd.append('color', cfg.type==='img' ? cfg.imgColor : cfg.color);
+    fd.append('sides', cfg.sides);
+    fd.append('copies', cfg.copies);
+    var res = await fetch(BACKEND_URL+'/api/ai/preview-check', {method:'POST', body:fd});
+    var data = await res.json();
+    if(!data.success) throw new Error(data.error);
+
+    var scoreColor = data.overallScore==='good'?'#22c55e':data.overallScore==='fair'?'#f59e0b':'#ef4444';
+
+    document.getElementById('previewResult').innerHTML =
+      '<div class="ai-card">' +
+        '<h3>🖼 Preview Check</h3>' +
+        '<p class="score-badge" style="color:'+scoreColor+'">Result: <strong>'+data.overallScore.toUpperCase()+'</strong></p>' +
+        (data.issues&&data.issues.length ? '<h4>Issues:</h4><ul style="font-size:12px;padding-left:16px;">'+data.issues.map(function(i){ return '<li>❌ '+i+'</li>'; }).join('')+'</ul>' : '<p style="font-size:12px;color:#166534;">✅ No critical issues</p>') +
+        (data.warnings&&data.warnings.length ? '<h4>Warnings:</h4><ul style="font-size:12px;padding-left:16px;">'+data.warnings.map(function(w){ return '<li>⚠️ '+w+'</li>'; }).join('')+'</ul>' : '') +
+        (data.previewNotes&&data.previewNotes.length ? '<h4>What to expect:</h4><ul style="font-size:12px;padding-left:16px;">'+data.previewNotes.map(function(n){ return '<li>📄 '+n+'</li>'; }).join('')+'</ul>' : '') +
+        (data.willLookGoodBW===false ? '<p class="ai-warning-box">⚠️ May not look good in B&W — consider colour printing.</p>' : '') +
+      '</div>';
+  } catch(e) {
+    toast('Preview check failed: '+e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '🖼 Check Print Preview';
+  }
+}
+
+// ────────────────────────────────────────────────
+// FEATURE 5: Natural Language Request
+// ────────────────────────────────────────────────
+async function parseNLRequest(){
+  var input = document.getElementById('nlpInput');
+  if(!input.value.trim()){ toast('Type a request first','warn'); return; }
+  var btn = document.getElementById('btnNlp');
+  btn.disabled = true; btn.textContent = '⏳';
+
+  try {
+    var res = await fetch(BACKEND_URL+'/api/ai/parse-request', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({text: input.value.trim()})
+    });
+    var data = await res.json();
+    if(!data.success) throw new Error(data.error);
+    var s = data.settings;
+
+    // Apply to form
+    cfg.color = s.color; cfg.sides = s.sides; cfg.copies = s.copies;
+    document.querySelectorAll('#colorChips .chip').forEach(function(c){ c.classList.remove('active'); });
+    document.querySelectorAll('#colorChips .chip').forEach(function(c){
+      if(c.getAttribute('onclick')&&c.getAttribute('onclick').includes("'"+s.color+"'")) c.classList.add('active');
+    });
+    document.querySelectorAll('#sideChips .chip').forEach(function(c){ c.classList.remove('active'); });
+    document.querySelectorAll('#sideChips .chip').forEach(function(c){
+      if(c.getAttribute('onclick')&&c.getAttribute('onclick').includes("'"+s.sides+"'")) c.classList.add('active');
+    });
+    document.getElementById('copies').value = s.copies;
+    if(s.urgent) document.getElementById('toggleUrgent').classList.add('on');
+    updatePrice();
+
+    document.getElementById('nlpResult').innerHTML =
+      '<div class="ai-card" style="margin-top:8px;">' +
+        '<p class="understood">✅ '+s.understood+'</p>' +
+        '<div class="nlp-tags">' +
+          '<span class="nlp-tag">🎨 '+s.color.toUpperCase()+'</span>' +
+          '<span class="nlp-tag">📄 '+s.sides+'-sided</span>' +
+          '<span class="nlp-tag">🔢 '+s.copies+' cop'+(s.copies>1?'ies':'y')+'</span>' +
+          (s.urgent?'<span class="nlp-tag" style="background:#fee2e2;color:#b91c1c;">🚨 Urgent</span>':'') +
+        '</div>' +
+        (s.missingInfo&&s.missingInfo.length ? '<p class="missing-note">Also consider: '+s.missingInfo.join(', ')+'</p>' : '') +
+      '</div>';
+  } catch(e) {
+    toast('Could not parse: '+e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '⚙️ Apply';
+  }
+}
+
+// ────────────────────────────────────────────────
+// Submit Job
+// ────────────────────────────────────────────────
+async function submitJob(){
+  var name = document.getElementById('studentName').value.trim();
+  var urgent = document.getElementById('toggleUrgent').classList.contains('on');
+  var copies = parseInt(document.getElementById('copies').value)||1;
+  var paid = document.getElementById('togglePay').classList.contains('on');
+  var eta = urgent ? '2–4 min' : (3*2+2)+'–'+(3*3+4)+' min';
+
+  var btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = 'Submitting...';
+
+  try {
+    var formData = new FormData();
+    formData.append('name', name);
+    formData.append('whatsapp', document.getElementById('whatsappNum').value);
+    formData.append('color', cfg.type==='img' ? cfg.imgColor : cfg.color);
+    formData.append('sides', cfg.sides);
+    formData.append('copies', copies);
+    formData.append('urgent', urgent);
+    formData.append('paid', paid);
+    formData.append('pages', cfg.pages);
+    formData.append('colorRanges', JSON.stringify(cfg.colorRanges||[]));
+    formData.append('fileType', cfg.type);
+    formData.append('imgPerSheet', cfg.imgPerSheet||1);
+    var fileInput = document.getElementById('fileInput');
+    if(fileInput.files&&fileInput.files[0]) formData.append('file', fileInput.files[0]);
+
+    var res = await fetch(BACKEND_URL+'/api/jobs', {method:'POST', body:formData});
+    var data = await res.json();
+    if(!data.success) throw new Error(data.error||'Failed');
+
+    document.getElementById('tokenNum').textContent = data.token;
+    document.getElementById('tokenEta').textContent = eta;
+    document.getElementById('tokenCard').classList.add('show');
+    document.getElementById('tokenCard').scrollIntoView({behavior:'smooth'});
+  } catch(err) {
+    alert('Error: '+err.message);
+    btn.disabled = false; btn.textContent = 'Submit Print Job →';
+  }
+}
+
+document.getElementById('studentName').addEventListener('input', checkSubmit);
+document.getElementById('copies').addEventListener('input', updatePrice);
+
+// Drag and drop
+var uz = document.getElementById('uploadZone');
+uz.addEventListener('dragover', function(e){ e.preventDefault(); uz.classList.add('drag'); });
+uz.addEventListener('dragleave', function(){ uz.classList.remove('drag'); });
+uz.addEventListener('drop', function(e){
+  e.preventDefault(); uz.classList.remove('drag');
+  if(e.dataTransfer.files.length) handleFile({files:e.dataTransfer.files});
+});
+</script>
+</body>
+</html>

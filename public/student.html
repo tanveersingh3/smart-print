@@ -609,6 +609,41 @@ function updatePrice(){
 }
 
 // ── Environmental Sustainability Calculator ──
+// CO2 MODEL — based on published research (see project report for sources):
+//
+// PAPER PRODUCTION:
+//   4.7g CO2 per A4 sheet (virgin fibre, 80gsm)
+//   Source: ISO 14040/14044 LCA study, Dias et al., ScienceDirect 2011
+//   (range across methodologies: 4.29–4.74g; we use 4.7g as midpoint)
+//
+// PRINTING ENERGY (laser printer):
+//   1.0g CO2 per printed page (side)
+//   Source: ezeep.com measurements on typical electricity mix
+//   Note: most laser energy is consumed in warm-up/fusing, not per-page area
+//
+// TONER / INK (amortised per page):
+//   B&W toner: 0.64g CO2/page  (3.2kg CO2 per cartridge ÷ 5000 pages)
+//   Colour toner: 0.96g CO2/page (4.8kg CO2 per cartridge ÷ 5000 pages)
+//   Source: Energy Central / TechEngage cartridge lifecycle data
+//
+// TOTAL PER PRINTED SIDE:
+//   B&W  = 4.7 (paper) + 1.0 (energy) + 0.64 (toner) = ~6.3g CO2
+//   Colour = 4.7 (paper) + 1.0 (energy) + 0.96 (toner) = ~6.7g CO2
+//
+// NOTE: paper weight is ~5g per A4 sheet (80gsm, ~0.0625 m² area)
+// NOTE: duplex printing uses same paper CO2 per sheet but halves sheet count
+// NOTE: India's electricity grid is more carbon-intensive (~0.71 kg CO2/kWh,
+//       CEA 2023) vs European average (~0.233 kg CO2/kWh). Laser printer
+//       uses ~0.04 kWh/page → 0.04 × 710 = ~28g CO2/page from electricity alone.
+//       We use the lower ezeep figure (1g) as a conservative estimate since
+//       most energy is in warm-up shared across many pages, not per-page.
+//       For India context, actual energy CO2 may be 2–3x higher.
+
+var CO2_PAPER_PER_SHEET = 4.7;   // grams — paper production (Dias et al. 2011)
+var CO2_ENERGY_PER_SIDE = 1.0;   // grams — printing energy (ezeep measurements)
+var CO2_TONER_BW        = 0.64;  // grams — B&W toner amortised per page
+var CO2_TONER_COLOR     = 0.96;  // grams — colour toner amortised per page
+
 function updateEco(pages, copies) {
   var ecoCard = document.getElementById('ecoCard');
   if (!pages || pages === 0) { ecoCard.style.display = 'none'; return; }
@@ -617,39 +652,56 @@ function updateEco(pages, copies) {
   var sides = cfg.sides;
   var color = cfg.type === 'img' ? cfg.imgColor : cfg.color;
 
-  // A4 sheet ~5g. Duplex halves sheet count.
+  // Sheets used — duplex halves physical sheet count
   var sheetsUsed = sides === 'double'
     ? Math.ceil(pages / 2) * copies
     : pages * copies;
+
+  // Total printed sides
+  var sidesUsed = pages * copies;
+
+  // Paper weight (5g per A4 sheet at 80gsm)
   var gramsOfPaper = sheetsUsed * 5;
 
-  // CO2: ~10g per sheet B&W, ~14g colour (ink + energy)
-  var co2PerSheet = color === 'color' ? 14 : 10;
-  var co2 = Math.round(sheetsUsed * co2PerSheet);
+  // CO2 breakdown using sourced values
+  var co2Paper  = sheetsUsed * CO2_PAPER_PER_SHEET;
+  var co2Energy = sidesUsed  * CO2_ENERGY_PER_SIDE;
+  var co2Toner  = sidesUsed  * (color === 'color' ? CO2_TONER_COLOR : CO2_TONER_BW);
+  var co2 = Math.round(co2Paper + co2Energy + co2Toner);
 
   // Eco score 0–100
-  var worstCase = 50 * 14;
-  var score = Math.max(0, Math.min(100, Math.round((1 - (co2 / worstCase)) * 100)));
+  // Worst case baseline: 50 pages, single-sided, colour, 1 copy
+  var worstCaseCO2 = (50 * CO2_PAPER_PER_SHEET) + (50 * CO2_ENERGY_PER_SIDE) + (50 * CO2_TONER_COLOR);
+  var score = Math.max(0, Math.min(100, Math.round((1 - (co2 / worstCaseCO2)) * 100)));
 
-  // Contextual tip — explains WHY score is high or low
+  // CO2 saved by duplex (sheets saved × paper CO2)
+  var sheetsSavedByDuplex = sides === 'double' ? Math.ceil(pages * copies / 2) : 0;
+  var co2SavedByDuplex = Math.round(sheetsSavedByDuplex * CO2_PAPER_PER_SHEET);
+
+  // CO2 saved by switching colour→bw (toner difference × sides)
+  var co2SavedByBW = Math.round(sidesUsed * (CO2_TONER_COLOR - CO2_TONER_BW));
+
+  // Contextual tip
   var tip = '';
   if (sides === 'double' && color === 'bw') {
-    tip = 'Score is high because you chose duplex + B&W — the most eco-friendly combination. You are saving ' + Math.ceil(pages * copies / 2) + ' sheets and using minimal ink. 🌿';
+    tip = 'Score is high because you chose duplex + B&W — the most eco-friendly combination. Duplex saved ' + sheetsSavedByDuplex + ' sheet' + (sheetsSavedByDuplex !== 1 ? 's' : '') + ' (~' + co2SavedByDuplex + 'g CO₂) and B&W toner has a lower manufacturing footprint. 🌿';
   } else if (sides === 'double' && color === 'color') {
-    tip = 'Score is good because duplex halved your paper use, saving ' + Math.ceil(pages * copies / 2) + ' sheets. Switch to B&W to save an extra ₹' + (pages * copies * 3) + ' and cut CO₂ further.';
+    tip = 'Score is good because duplex saved ' + sheetsSavedByDuplex + ' sheet' + (sheetsSavedByDuplex !== 1 ? 's' : '') + ' and ~' + co2SavedByDuplex + 'g CO₂. Switch to B&W to save ~' + co2SavedByBW + 'g more CO₂ and ₹' + (pages * copies * 3) + ' in cost.';
   } else if (sides === 'single' && color === 'bw') {
     var sv = Math.ceil(pages * copies / 2);
-    tip = 'Score could be higher. B&W is great, but single-sided is using ' + (pages * copies) + ' sheets. Switch to duplex to save ' + sv + ' sheet' + (sv > 1 ? 's' : '') + ' and cut CO₂ by ~' + Math.round(sv * 10) + 'g.';
+    var saveable = Math.round(sv * CO2_PAPER_PER_SHEET);
+    tip = 'B&W is a great choice. Enable duplex to save ' + sv + ' sheet' + (sv !== 1 ? 's' : '') + ' of paper and ~' + saveable + 'g CO₂ — paper production is the biggest contributor (~' + Math.round(co2Paper) + 'g of your total ' + co2 + 'g).';
   } else if (sides === 'single' && color === 'color') {
     var sv2 = Math.ceil(pages * copies / 2);
-    tip = 'Score is low — single-sided colour printing uses the most paper and ink. Enable duplex (saves ' + sv2 + ' sheets) and switch to B&W (saves ₹' + (pages * copies * 3) + ') to nearly double your score.';
+    var paperSave = Math.round(sv2 * CO2_PAPER_PER_SHEET);
+    tip = 'Score is low. Two improvements: enable duplex (saves ' + sv2 + ' sheets, ~' + paperSave + 'g CO₂) and switch to B&W (saves ~' + co2SavedByBW + 'g CO₂ + ₹' + (pages * copies * 3) + '). Paper production accounts for ' + Math.round((co2Paper / co2) * 100) + '% of total CO₂.';
   } else {
     tip = sides === 'single' && pages > 2
-      ? 'Consider enabling duplex to save ' + Math.ceil(pages * copies / 2) + ' sheets of paper.'
-      : 'Mixed colour — print only the pages that truly need colour to reduce impact.';
+      ? 'Mixed colour — enable duplex to save ' + Math.ceil(pages * copies / 2) + ' sheets (~' + Math.round(Math.ceil(pages * copies / 2) * CO2_PAPER_PER_SHEET) + 'g CO₂). Print only the pages that need colour.'
+      : 'Mixed colour — print only the pages that truly need colour to reduce toner CO₂.';
   }
   if (copies > 3) {
-    tip += ' Also: ' + copies + ' copies = ' + sheetsUsed + ' sheets total — double-check all are needed.';
+    tip += ' Note: ' + copies + ' copies = ' + sheetsUsed + ' sheets total (' + gramsOfPaper + 'g paper).';
   }
 
   var scoreLabel = score >= 75 ? '🌿 Excellent' : score >= 50 ? '🟡 Moderate' : score >= 25 ? '🟠 High impact' : '🔴 Very high impact';
