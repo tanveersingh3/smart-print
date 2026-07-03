@@ -1,268 +1,306 @@
-# Smart Print 🖨️
+# 🖨️ SmartPrint
+### AI-Powered Smart Printing Platform for Modern Print Shops
 
-A cloud-based print management system that enables students to submit print jobs remotely while allowing print shop operators to review, approve, and automatically print documents through a local print agent.
-
-## Problem Statement
-
-Traditional printing workflows are inefficient and time-consuming:
-
-* Students must physically visit print shops.
-* Documents are often shared through WhatsApp or pen drives.
-* Print settings need to be communicated manually.
-* Shop owners have to manage multiple orders without a centralized system.
-* Long queues result in wasted time and operational inefficiencies.
-
-Smart Print digitizes the entire process by providing an end-to-end cloud-based printing solution.
+SmartPrint is an intelligent print management platform that digitizes the entire printing workflow between students and print shops. Instead of standing in queues and repeatedly explaining print settings, users simply upload their documents, configure (or let AI configure) the print settings, and submit the job online. Merchants receive structured print requests through a real-time dashboard and can print documents automatically using the Smart Print Agent.
 
 ---
 
-## Solution
+## 🚀 Problem Statement
 
-Smart Print allows users to:
+Traditional print shops still rely on manual communication between customers and operators.
 
-* Upload documents remotely.
-* Configure print settings such as copies, color mode, and page preferences.
-* Submit print requests through a web interface.
-* Receive a unique token for tracking.
+Customers must:
+- Wait in long queues
+- Explain print settings repeatedly
+- Send documents through WhatsApp
+- Face printing mistakes due to miscommunication
 
-Print shop operators can:
+Merchants struggle with:
+- Managing multiple print requests simultaneously
+- Repeatedly asking customers about print preferences
+- Manual document handling
+- Increased waiting time during peak hours
 
-* View incoming requests.
-* Approve or reject jobs.
-* Manage the printing queue efficiently.
-
-A local Python Print Agent continuously monitors approved jobs and automatically sends them to the connected printer.
-
----
-
-## System Architecture
-
-Student
-   │
-   ▼
-Web Application
-(HTML/CSS/JavaScript)
-   │
-   ▼
-Node.js + Express Backend
-(Hosted on Railway)
-   │
-   ▼
-Firebase Firestore
-   │
-   ├───────────────► Operator Dashboard
-   │
-   ▼
-Python Print Agent
-(Local Shop Computer)
-   │
-   ▼
-Printer
+SmartPrint solves these problems by creating a complete digital printing workflow.
 
 ---
 
-## Tech Stack
+# ✨ Key Features
+
+## 📄 Smart Document Upload
+
+- Upload PDF documents
+- Upload PNG/JPG images
+- Automatic file validation
+- Secure cloud-based job submission
+
+---
+
+## 🖼 Intelligent Image Printing
+
+Unlike traditional print portals, SmartPrint intelligently handles image files.
+
+Features include:
+
+- Automatic image detection
+- Images per Sheet (1, 2, 4, 6, 8, etc.)
+- Automatic image arrangement
+- Automatic conversion into print-ready PDF
+- Optimized paper utilization
+
+---
+
+## 🤖 AI Print Assistant
+
+SmartPrint uses AI to simplify printing decisions.
+
+### AI Print Recommendations
+
+The AI analyzes uploaded documents and recommends:
+
+- Color or Black & White
+- Portrait or Landscape
+- Duplex or Single-sided printing
+- Suggested paper usage
+- Printing explanation
+
+---
+
+### ⚡ Quick Print
+
+One-click printing.
+
+The AI automatically configures all print settings, allowing users to submit print jobs within seconds.
+
+---
+
+### 💬 Natural Language Printing
+
+Users can simply type instructions such as:
+
+> Print this assignment in black & white, double-sided with two copies.
+
+SmartPrint automatically understands the request and configures the print settings.
+
+---
+
+### 📝 OCR (Optical Character Recognition)
+
+Extracts text from uploaded images and scanned documents.
+
+Useful for:
+
+- Scanned notes
+- Handwritten pages
+- Image-based assignments
+
+---
+
+## 🌱 Eco Print Score
+
+SmartPrint promotes sustainable printing by generating a dynamic Eco Print Score.
+
+The score considers:
+
+- Paper usage
+- Duplex printing
+- Color printing
+- Number of copies
+- Estimated environmental impact
+
+The score updates instantly whenever the print settings change.
+
+---
+
+## 👀 Print Preview
+
+Before submission, users can preview their documents to verify:
+
+- Orientation
+- Layout
+- Page order
+- Overall appearance
+
+This significantly reduces printing mistakes.
+
+---
+
+## 🎫 Token-Based Job Queue
+
+Every submitted print request receives a unique token.
+
+Benefits:
+
+- Easy tracking
+- Organized queue management
+- Faster customer handling
+
+---
+
+# 🖥 Operator Dashboard
+
+The operator dashboard provides merchants with a centralized interface to manage incoming print requests.
+
+Features include:
+
+- Live print queue
+- Approve / Reject jobs
+- View uploaded documents
+- View print settings
+- Download files
+- Job status management
+- Real-time synchronization using Firebase
+
+---
+
+# 🖨 Smart Print Agent
+
+The Smart Print Agent automates printing after operator approval.
+
+Responsibilities:
+
+- Downloads approved files
+- Sends documents directly to the connected printer
+- Eliminates repetitive manual downloading
+- Reduces operator workload
+
+---
+
+# ☁ Cloud Backend
+
+SmartPrint uses Firebase Firestore for real-time synchronization.
+
+Stores:
+
+- Student information
+- Print settings
+- Job status
+- Queue information
+- Tokens
+- Merchant operations
+
+---
+
+# 🌐 Deployment
+
+Frontend and backend are deployed using **Railway**, providing:
+
+- Cloud hosting
+- Public access
+- Automatic deployments
+- HTTPS support
+
+---
+
+# 🛠 Technology Stack
 
 ### Frontend
 
-* HTML5
-* CSS3
-* Vanilla JavaScript
+- HTML5
+- CSS3
+- JavaScript
 
 ### Backend
 
-* Node.js
-* Express.js
+- Node.js
+- Express.js
 
 ### Database
 
-* Firebase Firestore
+- Firebase Firestore
 
-### File Upload Handling
+### AI
 
-* Multer
+- OpenRouter API
+- Llama Models
 
-### Cloud Hosting
+### Printing
 
-* Railway
+- Python
+- Adobe Acrobat Automation
 
-### Print Automation
+### Cloud
 
-* Python
-
-### Printer Integration
-
-* Windows Print APIs / Adobe Reader
+- Railway
 
 ---
 
-## Key Features
+# 📱 Workflow
 
-### Student Portal
-
-* Upload PDF, DOC, DOCX, and image files
-* Configure print preferences
-* Specify copies and page settings
-* Submit print requests remotely
-* Receive job tokens
-
-URL :- https://smart-print-production.up.railway.app/student
-
-### Operator Dashboard
-
-* View all incoming jobs
-* Approve or reject requests
-* Monitor job queue
-* Manage print workflow
-
-URL :- https://smart-print-production.up.railway.app/operator
-
-### Automated Printing
-
-* Local Python Print Agent
-* Automatic job detection
-* File download and print execution
-* Status synchronization with database
-
----
-
-## Project Workflow
-
-### 1. Student Submission
-
-The student uploads a document and selects print preferences.
-
-Upload File
-↓
-Select Print Settings
-↓
-Submit Request
-
-### 2. Backend Processing
-
-The Node.js backend:
-
-* Receives the request
-* Stores uploaded files
-* Generates a unique token
-* Saves job details in Firestore
-
-### 3. Operator Approval
-
-The operator reviews the request and approves it.
-
-Pending
-↓
-Approved
-
-### 4. Automatic Printing
-
-The Python Print Agent:
-
-* Detects approved jobs
-* Downloads the file
-* Sends it to the printer
-* Updates job status
-
-Approved
-↓
-Downloading
-↓
-Printing
-↓
-Completed
-
----
-
-## Why This Architecture?
-
-Web browsers cannot directly access printers due to security restrictions.
-
-To overcome this limitation:
-
-1. The web application handles job submission.
-2. Firestore acts as a central communication layer.
-3. A local Python service acts as a bridge between the cloud and the printer.
-
-This architecture provides:
-
-* Security
-* Scalability
-* Reliability
-* Hardware independence
-
----
-
-## Future Enhancements
-
-* Real-time Firestore listeners
-* Payment gateway integration
-* Student order tracking
-* Multi-printer support
-* Queue prioritization
-* Print cost estimation
-* Authentication and user accounts
-* Mobile application
-* Print analytics dashboard
-
----
-
-## Installation
-
-### Clone Repository
-
-```bash
-git clone https://github.com/tanveersingh3/smart-print.git
-cd smart-print
-```
-
-### Install Dependencies
-
-```bash
-npm install
-```
-
-### Configure Firebase Credentials
-
-Create the required environment variables or Firebase service account configuration.
-
-### Start Backend
-
-```bash
-npm start
-```
-
-### Start Print Agent
-
-```bash
-python print_agent.py
+```text
+Student Uploads Document
+          │
+          ▼
+AI Analyzes Document
+          │
+          ▼
+Print Settings Generated
+          │
+          ▼
+Eco Score Updated
+          │
+          ▼
+Preview Generated
+          │
+          ▼
+Print Job Submitted
+          │
+          ▼
+Firebase Firestore
+          │
+          ▼
+Operator Dashboard
+          │
+          ▼
+Operator Approval
+          │
+          ▼
+Smart Print Agent
+          │
+          ▼
+Printer
 ```
 
 ---
 
-## Use Cases
+# 🌍 Future Vision
 
-* College Print Shops
-* University Libraries
-* Coaching Centers
-* Corporate Printing Services
-* Internet Cafés
-* Shared Office Spaces
+The vision of SmartPrint is to evolve into a complete intelligent printing ecosystem. A dedicated mobile application will allow users to discover nearby print shops, compare prices, waiting times, live queue lengths, customer ratings, and available services before placing an order. AI will recommend the most suitable print shop based on distance and workload, while personalized printing profiles, cloud document storage, and university LMS integration will make printing seamless. For merchants, SmartPrint will provide AI-powered operational insights and business recommendations. Ultimately, SmartPrint aims to become the **Google Maps for Printing**, connecting users and print shops through one intelligent platform.
 
 ---
 
-## Impact
+# 📈 Impact
 
-Smart Print reduces waiting time, eliminates manual file transfer, streamlines print operations, and creates a seamless cloud-to-printer workflow for both customers and print shop operators.
+SmartPrint helps:
+
+### Students
+
+- Faster print submission
+- No queue confusion
+- Reduced printing mistakes
+- Better user experience
+
+### Merchants
+
+- Faster order processing
+- Reduced manual work
+- Organized job management
+- Improved customer experience
+- Higher operational efficiency
 
 ---
 
-## Team
+# 🔒 Security
 
-Built as part of an effort to modernize traditional printing workflows through cloud technologies and automation.
+- Firebase Authentication
+- Secure Firestore Rules
+- Server-side validation
+- File validation before processing
 
 ---
 
-## License
+# 👨‍💻 Authors
 
-This project is intended for educational and demonstration purposes.
+Developed as part of the **Future Founders Program by OKCredit**.
+
+Built with ❤️ to modernize campus printing.
