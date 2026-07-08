@@ -146,18 +146,14 @@ def print_file(file_url, file_name, job_data):
                 f"🖨️ Printing copy {i + 1}/{copies}"
             )
 
+            ADOBE = r"C:\Program Files (x86)\Adobe\Reader 8.0\Reader\AcroRd32.exe"
+
             subprocess.Popen(
-                [
-                    ADOBE,
-                    "/h",
-                    "/t",
-                    save_path
-                ],
+                [ADOBE, "/h", "/t", save_path],
                 creationflags=subprocess.CREATE_NO_WINDOW
             )
 
-            time.sleep(3)
-
+            time.sleep(5)
         print("✅ Print command sent!")
 
         return True
