@@ -146,10 +146,6 @@ def print_file(file_url, file_name, job_data):
                 f"🖨️ Printing copy {i + 1}/{copies}"
             )
 
-            si = subprocess.STARTUPINFO()
-            si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            si.wShowWindow = subprocess.SW_MINIMIZE
-
             subprocess.Popen(
                 [
                     ADOBE,
@@ -157,7 +153,7 @@ def print_file(file_url, file_name, job_data):
                     "/t",
                     save_path
                 ],
-                startupinfo=si
+                creationflags=subprocess.CREATE_NO_WINDOW
             )
 
             time.sleep(3)
