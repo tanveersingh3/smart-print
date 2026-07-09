@@ -157,6 +157,10 @@ def print_file(file_url, file_name, job_data):
             )
 
             time.sleep(3)
+            subprocess.run(
+            ["taskkill", "/f", "/im", "AcroRd32.exe"],
+            creationflags=subprocess.CREATE_NO_WINDOW
+            )
 
         print("✅ Print command sent!")
 
