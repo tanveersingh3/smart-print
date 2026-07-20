@@ -3,7 +3,7 @@
 
 SmartPrint is an intelligent print management platform that digitizes the entire printing workflow between students and print shops. Instead of standing in queues and repeatedly explaining print settings, users simply upload their documents, configure (or let AI configure) the print settings, and submit the job online. Merchants receive structured print requests through a real-time dashboard and can print documents automatically using the Smart Print Agent.
 
----
+--
 
 ## 🚀 Problem Statement
 
